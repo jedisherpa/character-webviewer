@@ -1,0 +1,24 @@
+{
+  "builtAt": "2026-07-19T21:27:53.016Z",
+  "visualizers": [
+    {
+      "id": "joe-base250",
+      "path": "/joe/base250",
+      "pack": "base250"
+    },
+    {
+      "id": "joe-alpha-hd",
+      "path": "/joe/alpha-hd",
+      "pack": "alpha-hd"
+    },
+    {
+      "id": "dragonview",
+      "path": "/dragon",
+      "cast": [
+        "dragon",
+        "kingfisher",
+        "wizardjoe"
+      ]
+    }
+  ]
+}

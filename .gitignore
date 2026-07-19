@@ -1,0 +1,9 @@
+node_modules
+dist
+.vercel
+.DS_Store
+*.log
+.env
+.env.local
+.env.*.local
+# public/ assets are committed so Vercel CI can build without sibling repos.

@@ -1,0 +1,86 @@
+.wizard-joe-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  background: #ffffff;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+.wizard-joe-stage:active {
+  cursor: grabbing;
+}
+
+/* Static ambient plane; feet get a live floor oval in canvas paint */
+.wizard-joe-stage-floor {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 8%;
+  height: 22%;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 50% 45%,
+      rgba(15, 23, 42, 0.045) 0%,
+      rgba(15, 23, 42, 0.02) 40%,
+      rgba(15, 23, 42, 0.006) 68%,
+      transparent 80%
+    );
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.035);
+  pointer-events: none;
+}
+
+.wizard-joe-stage-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.wizard-joe-stage-error {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  margin: 0;
+  padding: 6px 10px;
+  font: 12px/1.3 "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color: #ffc9c9;
+  background: rgba(80, 20, 20, 0.88);
+  border: 1px solid rgba(232, 106, 106, 0.5);
+  border-radius: 6px;
+  z-index: 3;
+}
+
+.wizard-joe-stage-meta {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font: 10px/1.25 "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color: rgba(30, 41, 59, 0.38);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+}
+
+.wizard-joe-stage-hint {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  font: 10px/1.2 "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color: rgba(30, 41, 59, 0.28);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 2;
+}

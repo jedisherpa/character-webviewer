@@ -1,0 +1,32 @@
+# Append inside the Hetzner Caddy site block (before reverse_proxy)
+# so the Vercel webviewer can call live /api/* from the browser.
+#
+# Replace the origin list with your production + preview hosts.
+
+@webviewerOrigin {
+	header Origin https://character-webviewer.vercel.app
+	header Origin https://*.vercel.app
+}
+
+handle @webviewerOrigin {
+	header Access-Control-Allow-Origin "{http.request.header.Origin}"
+	header Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+	header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+	header Access-Control-Max-Age "86400"
+	header Vary Origin
+}
+
+@webviewerOptions {
+	method OPTIONS
+	header Origin https://character-webviewer.vercel.app
+}
+# Broad OPTIONS for vercel.app previews — tighten in production if needed
+@options method OPTIONS
+handle @options {
+	header Access-Control-Allow-Origin "{http.request.header.Origin}"
+	header Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+	header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+	header Access-Control-Max-Age "86400"
+	header Vary Origin
+	respond 204
+}

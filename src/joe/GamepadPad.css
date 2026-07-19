@@ -1,0 +1,257 @@
+/* On-screen gamepad — shared look with Dragonview character studio */
+
+.gp {
+  position: relative;
+  width: 340px;
+  height: 168px;
+  background: linear-gradient(165deg, #2a3140 0%, #1a1f2a 55%, #12161f 100%);
+  border-radius: 48px 48px 40px 40px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -8px 20px rgba(0, 0, 0, 0.35),
+    0 14px 28px rgba(0, 0, 0, 0.45);
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+  user-select: none;
+  touch-action: none;
+}
+
+.gp.is-compact {
+  width: 300px;
+  height: 150px;
+  padding: 14px 16px;
+  border-radius: 42px 42px 36px 36px;
+}
+
+.gp::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 40px 40px 34px 34px;
+  border: 1px solid rgba(126, 200, 188, 0.12);
+  pointer-events: none;
+}
+
+.gp-left,
+.gp-right,
+.gp-mid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 1;
+}
+
+.gp-mid {
+  justify-content: center;
+  gap: 8px;
+}
+
+.gp-dpad {
+  position: relative;
+  width: 84px;
+  height: 84px;
+}
+
+.gp-dpad button {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: #0e1219;
+  color: #8b95a8;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.gp-dpad button:hover {
+  color: #7ec8bc;
+}
+
+.gp-dpad button.is-down,
+.gp-btn.is-down,
+.gp-stick.is-down,
+.gp-face button.is-down {
+  background: #1a3a34;
+  color: #c8f0e8;
+  box-shadow: 0 0 0 2px rgba(126, 200, 188, 0.35), inset 0 0 12px rgba(126, 200, 188, 0.25);
+}
+
+.gp-dpad .up {
+  left: 28px;
+  top: 0;
+  border-radius: 6px 6px 4px 4px;
+}
+.gp-dpad .down {
+  left: 28px;
+  bottom: 0;
+  border-radius: 4px 4px 6px 6px;
+}
+.gp-dpad .left {
+  left: 0;
+  top: 28px;
+  border-radius: 6px 4px 4px 6px;
+}
+.gp-dpad .right {
+  right: 0;
+  top: 28px;
+  border-radius: 4px 6px 6px 4px;
+}
+.gp-dpad .center {
+  left: 28px;
+  top: 28px;
+  background: #151a24;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.gp-stick {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid rgba(126, 200, 188, 0.35);
+  background: radial-gradient(circle at 40% 35%, #3a4254, #151a24 70%);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+}
+
+.gp-stick::after {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 50%;
+  background: #0e1219;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.gp-stick.is-down {
+  border-color: #7ec8bc;
+  box-shadow: 0 0 0 3px rgba(126, 200, 188, 0.35);
+}
+
+.gp-face {
+  position: relative;
+  width: 92px;
+  height: 92px;
+}
+
+.gp-face button {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 0;
+  font: 700 11px/1 system-ui, sans-serif;
+  cursor: pointer;
+  color: #0c1a18;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.gp-face .y {
+  left: 31px;
+  top: 0;
+  background: #e8c06a;
+}
+.gp-face .a {
+  left: 31px;
+  bottom: 0;
+  background: #6bcf9a;
+}
+.gp-face .x {
+  left: 0;
+  top: 31px;
+  background: #6aa8ff;
+}
+.gp-face .b {
+  right: 0;
+  top: 31px;
+  background: #e86a6a;
+}
+
+.gp-face button:hover {
+  filter: brightness(1.08);
+}
+
+.gp-face button.is-down {
+  transform: translateY(1px);
+  box-shadow: 0 0 0 3px rgba(126, 200, 188, 0.35);
+  filter: brightness(1.15);
+  background: inherit;
+  color: #0c1a18;
+}
+
+.gp-shoulders {
+  display: flex;
+  gap: 8px;
+}
+
+.gp-shoulders button,
+.gp-meta button,
+.gp-btn {
+  min-width: 44px;
+  height: 22px;
+  border-radius: 6px 6px 4px 4px;
+  border: 0;
+  background: #0e1219;
+  color: #8b95a8;
+  font: 600 10px/1 system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+.gp-shoulders button:hover,
+.gp-meta button:hover,
+.gp-btn:hover {
+  color: #7ec8bc;
+}
+
+.gp-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.gp-meta button {
+  width: 36px;
+  min-width: 36px;
+  height: 14px;
+  border-radius: 999px;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+.gp-label {
+  font-size: 9px;
+  color: #5c6578;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.wj-gamepad-float {
+  position: absolute;
+  right: 16px;
+  bottom: 52px;
+  z-index: 7;
+  transform: scale(0.9);
+  transform-origin: bottom right;
+  pointer-events: auto;
+}
+
+@media (max-width: 900px) {
+  .wj-gamepad-float {
+    transform: scale(0.7);
+    right: 8px;
+    bottom: 44px;
+  }
+}

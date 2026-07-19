@@ -1,0 +1,45 @@
+{
+  "id": "white_stage",
+  "file": null,
+  "shot_name": "White_Stage_WizardJoe",
+  "notes": "Wizard Joe\u2013style white stage; duo world-space camera + controls.",
+  "camera": {
+    "description": "Front 3/4 low-heroic, white void. Same RH axes as bird-controller.",
+    "eye": [
+      14.0,
+      3.2,
+      6.5
+    ],
+    "target": [
+      0.0,
+      1.2,
+      0.0
+    ],
+    "up": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "fov_y_deg": 38.0,
+    "flip_x": false,
+    "flip_z": false
+  },
+  "image": {
+    "width": 960,
+    "height": 540
+  },
+  "bird_draw": {
+    "ref_height_units": 0.9,
+    "pixels_per_unit_at_ref_depth": 56,
+    "scale_multiplier": 2.4,
+    "feet_anchor": 0.94
+  },
+  "world": {
+    "origin": "ground center",
+    "plus_x": "forward (away from camera-right bias)",
+    "plus_y": "up",
+    "plus_z": "right",
+    "ground_y": 0.0
+  },
+  "background": "#ffffff"
+}
