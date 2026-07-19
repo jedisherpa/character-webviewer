@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-07-19T21:27:53.016Z",
+  "builtAt": "2026-07-19T21:53:57.171Z",
   "visualizers": [
     {
       "id": "joe-base250",
@@ -17,7 +17,9 @@
       "cast": [
         "dragon",
         "kingfisher",
-        "wizardjoe"
+        "wizardjoe",
+        "prism",
+        "speech"
       ]
     }
   ]

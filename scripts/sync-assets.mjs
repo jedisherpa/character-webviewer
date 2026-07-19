@@ -4,7 +4,7 @@
  *
  * Sources (local machines):
  *   RobinSpeech/public/wizard-joe-{alpha-hd,base250}
- *   dragonview/assets/{pose,kingfisher,wizardjoe}-library
+ *   dragonview/assets/{pose,kingfisher,wizardjoe,prism,speech}-library
  *
  * On CI: if sources are missing and public/ already has assets (committed),
  * the script succeeds so builds still work.
@@ -159,7 +159,11 @@ function writeManifest() {
     visualizers: [
       { id: "joe-base250", path: "/joe/base250", pack: "base250" },
       { id: "joe-alpha-hd", path: "/joe/alpha-hd", pack: "alpha-hd" },
-      { id: "dragonview", path: "/dragon", cast: ["dragon", "kingfisher", "wizardjoe"] },
+      {
+        id: "dragonview",
+        path: "/dragon",
+        cast: ["dragon", "kingfisher", "wizardjoe", "prism", "speech"],
+      },
     ],
   };
   fs.writeFileSync(path.join(PUBLIC, "manifest.json"), JSON.stringify(manifest, null, 2));
@@ -172,7 +176,9 @@ const okJoeB = syncWizardPack("wizard-joe-base250");
 const okDragon =
   syncDragonLib("dragon", "pose-library") &&
   syncDragonLib("kingfisher", "kingfisher-library") &&
-  syncDragonLib("wizardjoe", "wizardjoe-library");
+  syncDragonLib("wizardjoe", "wizardjoe-library") &&
+  syncDragonLib("prism", "prism-library") &&
+  syncDragonLib("speech", "speech-library");
 writeManifest();
 
 if (!okJoeA && !okJoeB && !exists(path.join(PUBLIC, "wizard-joe-alpha-hd"))) {

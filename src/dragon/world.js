@@ -14,7 +14,16 @@ export const FLAP_REGEN = 0.35;
 export const WORLD_XZ = 14.0;
 export const WORLD_Y_MAX = 9.5;
 
-export const CAST_ORDER = ["dragon", "kingfisher", "wizardjoe"];
+/** Five-cast stage: dragon · kingfisher · wizard joe · robin prism · robin speech */
+export const CAST_ORDER = ["dragon", "kingfisher", "wizardjoe", "prism", "speech"];
+
+export const CHAR_LABEL = {
+  dragon: "dragon",
+  kingfisher: "kingfisher",
+  wizardjoe: "wizard joe",
+  prism: "prism",
+  speech: "speech",
+};
 
 export function createInput() {
   return {
@@ -66,15 +75,20 @@ export class WorldSim {
     this.tick = 0;
     this.active = "dragon";
     this.screen_relative = true;
+    // Same homes as dragonview/viewer/world.py (5-cast white stage)
     this.home = {
       dragon: [0, 0, 0],
       kingfisher: [0, 0, 2.8],
       wizardjoe: [0, 0, -2.8],
+      prism: [1.6, 0, 1.4],
+      speech: [1.6, 0, -1.4],
     };
     this.actors = {
       dragon: makeActor("dragon", this.home.dragon, 1),
       kingfisher: makeActor("kingfisher", this.home.kingfisher, -1),
       wizardjoe: makeActor("wizardjoe", this.home.wizardjoe, 1),
+      prism: makeActor("prism", this.home.prism, 1),
+      speech: makeActor("speech", this.home.speech, -1),
     };
     this._prev_switch = false;
     this._prev_axes = false;
@@ -278,7 +292,7 @@ export class WorldSim {
     return {
       id: a.id,
       character: a.id,
-      display_id: a.id === "wizardjoe" ? "wizard joe" : a.id,
+      display_id: CHAR_LABEL[a.id] || a.id,
       pos: [...a.pos],
       flight: a.flight,
       free_flight: a.free_flight,

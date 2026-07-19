@@ -21,8 +21,8 @@ const CARDS = [
   {
     to: "/dragon",
     title: "Dragonview",
-    badge: "3-cast",
-    blurb: "Dragon · Kingfisher · Wizard Joe on white stage · world-space pad",
+    badge: "5-cast",
+    blurb: "Dragon · Kingfisher · Wizard Joe · Prism · Speech · world-space pad",
     accent: "violet",
   },
 ];

@@ -3,12 +3,20 @@ import { Link } from "react-router-dom";
 import { CAST_ORDER, WorldSim, createInput } from "./world.js";
 import "./DragonStudio.css";
 
-const CHAR_TAG = { dragon: "DR", kingfisher: "KF", wizardjoe: "WJ" };
+const CHAR_TAG = {
+  dragon: "DR",
+  kingfisher: "KF",
+  wizardjoe: "WJ",
+  prism: "PR",
+  speech: "SP",
+};
 const CAT_LABELS = {
   moves: "Moves & Skills",
   dragon: "Dragon",
   kingfisher: "Kingfisher",
   wizardjoe: "Wizard Joe",
+  prism: "Prism",
+  speech: "Speech",
 };
 
 function norm(v) {
@@ -320,11 +328,13 @@ export function DragonStudio() {
         const draw = (img) => {
           if (!img) {
             ctx.fillStyle =
-              b.id === "kingfisher"
+              b.id === "kingfisher" || b.id === "speech"
                 ? "rgba(37,99,235,0.55)"
                 : b.id === "wizardjoe"
                   ? "rgba(168,85,247,0.55)"
-                  : "rgba(217,119,6,0.65)";
+                  : b.id === "prism"
+                    ? "rgba(34,197,94,0.55)"
+                    : "rgba(217,119,6,0.65)";
             ctx.beginPath();
             ctx.arc(pr.x, pr.y - 18, 14, 0, Math.PI * 2);
             ctx.fill();
@@ -349,9 +359,11 @@ export function DragonStudio() {
             ctx.strokeStyle =
               b.id === "wizardjoe"
                 ? "rgba(168,85,247,0.85)"
-                : b.id === "kingfisher"
+                : b.id === "kingfisher" || b.id === "speech"
                   ? "rgba(37,99,235,0.8)"
-                  : "rgba(217,119,6,0.7)";
+                  : b.id === "prism"
+                    ? "rgba(34,197,94,0.85)"
+                    : "rgba(217,119,6,0.7)";
             ctx.lineWidth = 1.5;
             ctx.strokeRect(leftX - 2, topY - 2, dw + 4, dh + 4);
           }
@@ -487,7 +499,9 @@ export function DragonStudio() {
               </Link>{" "}
               · Dragonview
             </strong>
-            <span id="plate-label">Dragon · Kingfisher · Wizard Joe · white stage · world-space</span>
+            <span id="plate-label">
+              Dragon · Kingfisher · Wizard Joe · Prism · Speech · white stage · 5-cast
+            </span>
           </div>
           <div className="dv-actions">
             <span className="pill">{hud.active}</span>
