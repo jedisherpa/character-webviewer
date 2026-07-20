@@ -164,6 +164,11 @@
   color: #e9d5ff;
 }
 
+.accent-slate .hub-badge {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+}
+
 .hub-open {
   font-size: 12px;
   font-weight: 600;

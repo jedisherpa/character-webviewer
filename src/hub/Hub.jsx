@@ -5,26 +5,33 @@ import "./Hub.css";
 
 const CARDS = [
   {
+    to: "/studio",
+    title: "Production Studio",
+    badge: "primary",
+    blurb:
+      "Full-stage production bay · record poses & clips into sequences · save/replay · programmable gamepad · toggle drawers",
+    accent: "teal",
+  },
+  {
     to: "/joe/alpha-hd",
     title: "Wizard Joe · Alpha HD",
     badge: "960×540",
-    blurb:
-      "NewsWiz production alphas · 270 poses · walk/fly loops · studio + gamepad · live mic/chat/rant when Hetzner is linked",
-    accent: "teal",
+    blurb: "NewsWiz character studio · 270 poses · walk/fly loops · live dock when linked",
+    accent: "amber",
+  },
+  {
+    to: "/dragon",
+    title: "Dragonview classic",
+    badge: "5-cast",
+    blurb: "Original multi-cast world-space pad · walk/fly loops · pose grid",
+    accent: "violet",
   },
   {
     to: "/joe/base250",
     title: "Wizard Joe · Base 250",
     badge: "legacy",
-    blurb: "Base 250 pack · same studio controls for side-by-side compare",
-    accent: "amber",
-  },
-  {
-    to: "/dragon",
-    title: "Dragonview",
-    badge: "5-cast",
-    blurb: "Dragon · Kingfisher · Wizard Joe · Prism · Speech · world-space pad",
-    accent: "violet",
+    blurb: "Side-by-side compare pack",
+    accent: "slate",
   },
 ];
 
@@ -58,7 +65,7 @@ export function Hub() {
         <header className="hub-head">
           <div>
             <strong>Character Studio</strong>
-            <span>Webviewer · Vercel static · Hetzner live API</span>
+            <span>Production bay · Vercel static · optional Hetzner live</span>
           </div>
           <a
             className="hub-gh"
@@ -90,11 +97,9 @@ export function Hub() {
 
         <footer className="hub-foot">
           <p>
-            Visualizers ship on <strong>Vercel</strong> (this repo). NewsWiz live
-            (mic / chat / rant / TTS) is a separate process on{" "}
-            <strong>Hetzner</strong> — set <code>VITE_LIVE_API_BASE</code> and enable
-            CORS. Local: <code>4310</code> Base 250 · <code>4350</code> Alpha HD ·{" "}
-            <code>4370</code> Dragonview · <code>4400</code> this hub.
+            <strong>Production Studio</strong> keeps the stage huge — drawers for library, timeline,
+            sequences, gamepad map, and docs toggle in with <code>L T S G C ?</code>. Record gamepad
+            presses into reusable choreography.
           </p>
         </footer>
       </div>
