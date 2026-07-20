@@ -1,6 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { CAST_ORDER, WorldSim, createInput } from "./world.js";
+import {
+  DialogueDesk,
+  DEFAULT_DIALOGUE_RECIPES,
+  applyDeskBeat,
+  recipeBeatsForDesk,
+} from "../desk/index.js";
 import "./DragonStudio.css";
 
 const CHAR_TAG = {
@@ -12,6 +18,7 @@ const CHAR_TAG = {
 };
 const CAT_LABELS = {
   moves: "Moves & Skills",
+  desk: "Dialogue desk",
   dragon: "Dragon",
   kingfisher: "Kingfisher",
   wizardjoe: "Wizard Joe",
@@ -168,11 +175,108 @@ export function DragonStudio() {
   const [showVolumes, setShowVolumes] = useState(false);
   const [toast, setToast] = useState(null);
   const clipsRef = useRef([]);
+  const deskRef = useRef(null);
+  if (!deskRef.current) deskRef.current = new DialogueDesk({ id: "dragonview-desk" });
+  const [deskBeats, setDeskBeats] = useState([]);
+  const [deskCursor, setDeskCursor] = useState(0);
+  const [deskPlaying, setDeskPlaying] = useState(false);
+  const deskAbortRef = useRef(null);
 
   const showToast = useCallback((msg, kind = "ok") => {
     setToast({ msg, kind });
     setTimeout(() => setToast(null), 2400);
   }, []);
+
+  const buildDeskCatalog = useCallback(() => {
+    const poses = posesRef.current.map((p) => ({ pose_id: p.id, id: p.id }));
+    const clips = clipsRef.current.map((c) => ({
+      name: c.name,
+      character: c.character,
+      frames: c.frames,
+      looped: c.looped,
+      hold_ticks: c.hold_ticks,
+      forward_speed: c.forward_speed,
+      translate_toward_camera: c.translate_toward_camera,
+      label: c.label,
+    }));
+    return { poses, clips };
+  }, []);
+
+  const loadDeskRecipe = useCallback(
+    (recipeId) => {
+      const desk = deskRef.current;
+      const raw = recipeBeatsForDesk(recipeId);
+      const { rejected } = desk.load(raw);
+      setDeskBeats(desk.beats);
+      setDeskCursor(desk.cursor);
+      showToast(
+        rejected.length
+          ? `Desk loaded with ${rejected.length} rejected`
+          : `Desk · ${desk.length} beats (order owned)`,
+        rejected.length ? "err" : "ok",
+      );
+    },
+    [showToast],
+  );
+
+  const applyDeskCurrent = useCallback(() => {
+    const desk = deskRef.current;
+    const beat = desk.current;
+    const sim = simRef.current;
+    if (!beat || !sim) {
+      showToast("No desk beat", "err");
+      return;
+    }
+    const result = applyDeskBeat(sim, beat, buildDeskCatalog());
+    setActivePoseId(result.speaker?.poseId || null);
+    if (result.speaker?.clipName) setActiveClip(`${result.speaker.actorId}:${result.speaker.clipName}`);
+    showToast(
+      result.ok
+        ? `Beat ${beat.index + 1}: ${beat.speaker.id}${beat.listener ? ` + ${beat.listener.id}` : ""}`
+        : `Beat failed · ${(result.warnings || []).join(", ")}`,
+      result.ok ? "ok" : "err",
+    );
+  }, [buildDeskCatalog, showToast]);
+
+  const playDesk = useCallback(async () => {
+    const desk = deskRef.current;
+    const sim = simRef.current;
+    if (!desk.length || !sim) {
+      showToast("Load a recipe first", "err");
+      return;
+    }
+    deskAbortRef.current?.abort();
+    const ac = new AbortController();
+    deskAbortRef.current = ac;
+    setDeskPlaying(true);
+    desk.resetCursor();
+    setDeskCursor(0);
+    try {
+      for (let i = 0; i < desk.length; i += 1) {
+        if (ac.signal.aborted) break;
+        const beat = desk.seek(i);
+        setDeskCursor(i);
+        setDeskBeats(desk.beats);
+        applyDeskBeat(sim, beat, buildDeskCatalog());
+        await new Promise((r) => {
+          const t = setTimeout(r, Math.max(120, beat.holdMs || 1600));
+          ac.signal.addEventListener("abort", () => {
+            clearTimeout(t);
+            r();
+          }, { once: true });
+        });
+      }
+      if (!ac.signal.aborted) showToast("Desk sequence done");
+    } finally {
+      setDeskPlaying(false);
+    }
+  }, [buildDeskCatalog, showToast]);
+
+  const stopDesk = useCallback(() => {
+    deskAbortRef.current?.abort();
+    setDeskPlaying(false);
+    showToast("Desk stopped");
+  }, [showToast]);
 
   const playNamedClip = useCallback(
     (name, character = "wizardjoe") => {
@@ -538,6 +642,7 @@ export function DragonStudio() {
   }, [applyKey]);
 
   const filtered = useMemo(() => {
+    if (cat === "desk") return [];
     const q = filter.trim().toLowerCase();
     return poses.filter((p) => {
       if (cat !== "moves" && p.character !== cat) return false;
@@ -653,11 +758,89 @@ export function DragonStudio() {
             <div className="pose-head">
               <span className="pose-pill">{CAT_LABELS[cat]}</span>
               <span className="pose-meta">
-                {filtered.length} poses
-                {clips.length ? ` · ${clips.length} clips` : ""}
+                {cat === "desk"
+                  ? `${deskBeats.length} beats · desk owns order · no peer`
+                  : `${filtered.length} poses${clips.length ? ` · ${clips.length} clips` : ""}`}
               </span>
             </div>
-            {clips.length ? (
+            {cat === "desk" ? (
+              <div className="dv-desk" aria-label="Dialogue desk">
+                <p className="dv-desk-lead">
+                  Beats bind to dragonview pose clips: <code>speakerClipId</code> + optional{" "}
+                  <code>listenerClipId</code>. Order is desk-only.
+                </p>
+                <div className="dv-featured" aria-label="Desk recipes">
+                  {DEFAULT_DIALOGUE_RECIPES.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      className="dv-chip"
+                      onClick={() => loadDeskRecipe(r.id)}
+                      title={r.notes}
+                    >
+                      {r.title}
+                    </button>
+                  ))}
+                </div>
+                <div className="btn-grid" style={{ margin: "0.5rem 0" }}>
+                  <button type="button" className="icon-btn primary" disabled={!deskBeats.length || deskPlaying} onClick={playDesk}>
+                    Play desk
+                  </button>
+                  <button type="button" className="icon-btn" disabled={!deskPlaying} onClick={stopDesk}>
+                    Stop
+                  </button>
+                  <button type="button" className="icon-btn" disabled={!deskBeats.length} onClick={applyDeskCurrent}>
+                    Apply beat
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    disabled={!deskBeats.length}
+                    onClick={() => {
+                      const b = deskRef.current.next();
+                      setDeskCursor(deskRef.current.cursor);
+                      if (b) applyDeskCurrent();
+                    }}
+                  >
+                    Next beat
+                  </button>
+                </div>
+                <ol className="dv-desk-beats">
+                  {deskBeats.map((b) => (
+                    <li
+                      key={b.beatId}
+                      className={b.index === deskCursor ? "is-active" : ""}
+                    >
+                      <button
+                        type="button"
+                        className="dv-desk-beat"
+                        onClick={() => {
+                          deskRef.current.seek(b.index);
+                          setDeskCursor(b.index);
+                          applyDeskCurrent();
+                        }}
+                      >
+                        <strong>#{b.index + 1}</strong>{" "}
+                        <span className="mono">{b.speaker.id}</span>
+                        {b.listener ? (
+                          <>
+                            {" "}
+                            <span className="mute">+</span>{" "}
+                            <span className="mono mute">{b.listener.id}</span>
+                          </>
+                        ) : null}
+                        <span className="mute"> · {b.holdMs}ms</span>
+                        {b.title ? <span className="mute"> · {b.title}</span> : null}
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+                {!deskBeats.length ? (
+                  <p className="mute">Load a recipe to populate the desk-ordered beat list.</p>
+                ) : null}
+              </div>
+            ) : null}
+            {cat !== "desk" && clips.length ? (
               <div className="dv-featured" aria-label="Choreography clips">
                 {clips.map((c) => (
                   <button
@@ -672,12 +855,15 @@ export function DragonStudio() {
                 ))}
               </div>
             ) : null}
+            {cat !== "desk" ? (
             <input
               className="pose-filter"
               placeholder="Filter poses…"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
+            ) : null}
+            {cat !== "desk" ? (
             <div className="pose-scroll">
               <div className="pose-grid">
                 {filtered.map((p) => (
@@ -697,6 +883,7 @@ export function DragonStudio() {
                 ))}
               </div>
             </div>
+            ) : null}
           </section>
 
           <section className="dv-preview">

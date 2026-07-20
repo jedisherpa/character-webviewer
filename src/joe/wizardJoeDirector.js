@@ -86,10 +86,12 @@ export function directWizardJoeClip(input = {}) {
   if (input.dancing || input.action === "dance" || input.action === "breakdance") {
     return input.action === "dance" ? "dance" : "breakdance";
   }
-  if (input.ranting) return "speak";
+  // Explicit action wins during rant so setup (news) / payoff (speak) beat
+  // cues from the speechwriter actually change the stage clip.
   if (input.action && ACTION_CLIPS.has(String(input.action).toLowerCase())) {
     return String(input.action).toLowerCase();
   }
+  if (input.ranting) return "speak";
   const stage = String(input.stage || "").toLowerCase();
   if (SPEAKING_STAGES.has(stage)) return "speak";
   if (THINKING_STAGES.has(stage)) return "think";

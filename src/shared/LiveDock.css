@@ -17,6 +17,95 @@
   font: 500 12px/1.35 system-ui, -apple-system, sans-serif;
 }
 
+/* Full left news surface (Joe studio) */
+.live-dock.is-news-surface {
+  top: 56px;
+  bottom: 16px;
+  left: 12px;
+  width: min(300px, 32vw);
+  max-height: none;
+  border-radius: 16px;
+  padding: 12px;
+  background: linear-gradient(180deg, rgba(18, 22, 31, 0.96), rgba(10, 13, 20, 0.96));
+}
+
+.live-feed-list {
+  flex: 1;
+  min-height: 120px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 2px;
+  scroll-behavior: smooth;
+}
+
+.live-feed-card {
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.live-feed-card.is-played {
+  opacity: 0.58;
+}
+
+.live-feed-card.is-featured {
+  opacity: 1;
+  border-color: rgba(126, 200, 188, 0.55);
+  background: linear-gradient(160deg, rgba(126, 200, 188, 0.14), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.live-feed-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 10px;
+  color: #8b95a8;
+}
+
+.live-on-air {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(232, 106, 106, 0.2);
+  border: 1px solid rgba(232, 106, 106, 0.4);
+  color: #ffb4b4;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  font-size: 9px;
+}
+
+.live-domain {
+  margin-left: auto;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-feed-card strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #f0f4fa;
+  margin-bottom: 4px;
+}
+
+.live-feed-card p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #8b95a8;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .live-dock.is-offline {
   opacity: 0.92;
 }
@@ -72,6 +161,48 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 10px;
   word-break: break-all;
+}
+
+.live-source {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.live-source select {
+  appearance: none;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 28px 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(45deg, transparent 50%, #94a3b8 50%) calc(100% - 12px) 12px / 5px 5px no-repeat,
+    linear-gradient(135deg, #94a3b8 50%, transparent 50%) calc(100% - 8px) 12px / 5px 5px no-repeat,
+    rgba(0, 0, 0, 0.25);
+  color: #e8edf5;
+  font: 500 12px/1 system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  cursor: pointer;
+}
+
+.live-source select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.live-source-hint {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #64748b;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .live-actions {

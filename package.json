@@ -9,7 +9,8 @@
     "prebuild": "node scripts/sync-assets.mjs",
     "dev": "vite --host=localhost --port=4400",
     "build": "vite build",
-    "preview": "vite preview --host=localhost --port=4401"
+    "preview": "vite preview --host=localhost --port=4401",
+    "prove:desk": "node scripts/prove-dialogue-desk.mjs"
   },
   "dependencies": {
     "react": "^18.2.0",

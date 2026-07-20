@@ -38,7 +38,8 @@ No Python process is required on Vercel — Dragonview sim runs in the browser.
 1. Push `main` to GitHub.
 2. Import project at https://vercel.com/new — Framework **Vite**, output `dist`.
 3. (Optional) Project env:
-   - `VITE_LIVE_API_BASE` = `https://<your-hetzner-host>`
+   - `VITE_LIVE_API_BASE` = `https://41birdlive.5.78.137.112.sslip.io` (live API + Joe studio)
+   - `VITE_BIRD_LIVE_URL` = `https://41birdlive.5.78.137.112.sslip.io` (41 Bird Live iframe / hub card)
 4. Production auto-deploys on every push to `main`.
 
 CLI alternative:
@@ -46,10 +47,31 @@ CLI alternative:
 ```bash
 npx vercel link
 npx vercel env add VITE_LIVE_API_BASE production
+npx vercel env add VITE_BIRD_LIVE_URL production
 npx vercel --prod
 ```
 
-## Hetzner (live backend only)
+## 41BirdLive (Hetzner one-bird runtime)
+
+Production install of the local `:4341` one-bird stack on the same Hetzner host:
+
+| Item | Value |
+|------|--------|
+| Public URL | `https://41birdlive.5.78.137.112.sslip.io` |
+| Local bind | `127.0.0.1:4341` |
+| App root | `/opt/41birdlive` |
+| systemd | `41birdlive.service` |
+| Source tree | `/opt/41birdlive/src` (release under `current/`) |
+
+Install path (on host): build `robbin-prism-runtime`, then
+`/opt/41birdlive/src/deploy/install-41birdlive.sh /opt/41birdlive/src` after placing the binary
+under `bin/` or `target/release/`. Nginx site: `deploy/41birdlive.nginx.conf` (CORS for Vercel).
+
+Webviewer surfaces:
+- Hub card + route `/41birdlive` embeds the full runtime UI when `VITE_BIRD_LIVE_URL` is set
+- LiveDock / Joe studio rant APIs use `VITE_LIVE_API_BASE` (same origin)
+
+## Hetzner (other live backends)
 
 Use the existing **RobinSpeech / Prism GT** Hetzner path — do not re-host the visualizers there unless you want a single-origin setup.
 

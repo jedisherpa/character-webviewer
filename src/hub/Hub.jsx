@@ -1,30 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { HAS_LIVE_BACKEND, LIVE_API_BASE, probeLiveBackend } from "../shared/config.js";
+import {
+  BIRD_LIVE_URL,
+  HAS_BIRD_LIVE,
+  HAS_LIVE_BACKEND,
+  LIVE_API_BASE,
+  probeBirdLive,
+  probeLiveBackend,
+} from "../shared/config.js";
 import "./Hub.css";
 
 const CARDS = [
+  {
+    to: "/41birdlive",
+    title: "41 Bird Live",
+    badge: "Hetzner",
+    blurb:
+      "One-bird Prism runtime · NewsWiz + FishEye rant · same stack as local :4341 · full UI on Hetzner",
+    accent: "teal",
+    external: false,
+  },
   {
     to: "/studio",
     title: "Production Studio",
     badge: "primary",
     blurb:
       "Full-stage production bay · record poses & clips into sequences · save/replay · programmable gamepad · toggle drawers",
-    accent: "teal",
+    accent: "amber",
   },
   {
     to: "/joe/alpha-hd",
     title: "Wizard Joe · Alpha HD",
     badge: "960×540",
     blurb: "NewsWiz character studio · 270 poses · walk/fly loops · live dock when linked",
-    accent: "amber",
+    accent: "violet",
   },
   {
     to: "/dragon",
     title: "Dragonview classic",
     badge: "5-cast",
     blurb: "Original multi-cast world-space pad · walk/fly loops · pose grid",
-    accent: "violet",
+    accent: "slate",
   },
   {
     to: "/joe/base250",
@@ -42,11 +58,20 @@ export function Hub() {
     error: HAS_LIVE_BACKEND ? "probing…" : "static only",
     base: LIVE_API_BASE || null,
   });
+  const [bird, setBird] = useState({
+    ok: false,
+    configured: HAS_BIRD_LIVE,
+    error: HAS_BIRD_LIVE ? "probing…" : "not set",
+    url: BIRD_LIVE_URL || null,
+  });
 
   useEffect(() => {
     let cancelled = false;
     probeLiveBackend().then((r) => {
       if (!cancelled) setLive(r);
+    });
+    probeBirdLive().then((r) => {
+      if (!cancelled) setBird(r);
     });
     return () => {
       cancelled = true;
@@ -54,10 +79,16 @@ export function Hub() {
   }, []);
 
   const liveLabel = !live.configured
-    ? "Static only · live API on Hetzner optional"
+    ? "Static only · set VITE_LIVE_API_BASE for live API"
     : live.ok
-      ? `Live backend · ${live.base}`
-      : `Live backend unreachable · ${live.error || "error"}`;
+      ? `Live API · ${live.base}`
+      : `Live API unreachable · ${live.error || "error"}`;
+
+  const birdLabel = !bird.configured
+    ? "41 Bird Live URL not set (VITE_BIRD_LIVE_URL)"
+    : bird.ok
+      ? `41 Bird Live · ${bird.url}`
+      : `41 Bird Live unreachable · ${bird.error || "error"}`;
 
   return (
     <div className="hub">
@@ -65,7 +96,7 @@ export function Hub() {
         <header className="hub-head">
           <div>
             <strong>Character Studio</strong>
-            <span>Production bay · Vercel static · optional Hetzner live</span>
+            <span>Production bay · Vercel static · 41BirdLive on Hetzner</span>
           </div>
           <a
             className="hub-gh"
@@ -80,6 +111,10 @@ export function Hub() {
         <div className={`hub-live ${live.configured ? (live.ok ? "is-ok" : "is-bad") : "is-off"}`}>
           <span className="hub-live-dot" aria-hidden="true" />
           {liveLabel}
+        </div>
+        <div className={`hub-live ${bird.configured ? (bird.ok ? "is-ok" : "is-bad") : "is-off"}`}>
+          <span className="hub-live-dot" aria-hidden="true" />
+          {birdLabel}
         </div>
 
         <div className="hub-grid">
@@ -97,9 +132,9 @@ export function Hub() {
 
         <footer className="hub-foot">
           <p>
-            <strong>Production Studio</strong> keeps the stage huge — drawers for library, timeline,
-            sequences, gamepad map, and docs toggle in with <code>L T S G C ?</code>. Record gamepad
-            presses into reusable choreography.
+            <strong>41 Bird Live</strong> is the one-bird Prism runtime on Hetzner (local port{" "}
+            <code>4341</code>). Joe studio uses the same live API when{" "}
+            <code>VITE_LIVE_API_BASE</code> points at that origin.
           </p>
         </footer>
       </div>

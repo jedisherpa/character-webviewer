@@ -711,3 +711,27 @@ canvas:focus { box-shadow: 0 0 0 2px var(--teal), 0 16px 48px rgba(0,0,0,0.4); }
   .dv-body { grid-template-columns:1fr; grid-template-rows:auto minmax(180px,34vh) 1fr; }
   .dv-rail { flex-direction:row; flex-wrap:wrap; border-right:0; border-bottom:1px solid var(--line); }
 }
+
+/* Dialogue desk (speakerClipId + optional listenerClipId) */
+.dv-desk { padding: 0 4px 12px; display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; overflow: auto; }
+.dv-desk-lead { margin: 0; color: var(--mute); font-size: 12px; line-height: 1.45; }
+.dv-desk-lead code { font: 11px/1 ui-monospace, monospace; color: var(--teal); }
+.dv-desk-beats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.dv-desk-beats li { margin: 0; }
+.dv-desk-beat {
+  width: 100%; text-align: left;
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  padding: 8px 10px;
+  cursor: pointer;
+  font: 12px/1.35 system-ui, sans-serif;
+}
+.dv-desk-beat:hover { border-color: rgba(126, 200, 188, 0.4); }
+.dv-desk-beats li.is-active .dv-desk-beat {
+  border-color: rgba(126, 200, 188, 0.65);
+  background: rgba(126, 200, 188, 0.12);
+}
+.dv-desk .mono { font: 11px/1.3 ui-monospace, monospace; }
+.dv-desk .mute { color: var(--mute); }
