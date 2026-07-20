@@ -158,17 +158,51 @@ export function DragonStudio() {
   const plateRef = useRef(null);
   const posesRef = useRef([]);
   const [poses, setPoses] = useState([]);
+  /** @type {[{name:string, character:string, frames:string[], looped:boolean, hold_ticks:number, forward_speed:number, translate_toward_camera:boolean, label?:string}]} */
+  const [clips, setClips] = useState([]);
   const [cat, setCat] = useState("moves");
   const [filter, setFilter] = useState("");
   const [activePoseId, setActivePoseId] = useState(null);
+  const [activeClip, setActiveClip] = useState(null);
   const [hud, setHud] = useState({ active: "dragon", tick: 0, note: "boot" });
   const [showVolumes, setShowVolumes] = useState(false);
   const [toast, setToast] = useState(null);
+  const clipsRef = useRef([]);
 
   const showToast = useCallback((msg, kind = "ok") => {
     setToast({ msg, kind });
     setTimeout(() => setToast(null), 2400);
   }, []);
+
+  const playNamedClip = useCallback(
+    (name, character = "wizardjoe") => {
+      const sim = simRef.current;
+      if (!sim) return;
+      const def =
+        clipsRef.current.find((c) => c.name === name && c.character === character) ||
+        clipsRef.current.find((c) => c.name === name);
+      if (!def?.frames?.length) {
+        showToast(`No clip ${name}`, "err");
+        return;
+      }
+      try {
+        const aid = sim.actors[def.character] ? def.character : character;
+        if (sim.actors[aid]) sim.active = aid;
+        sim.play_clip(def.name, def.frames, {
+          looped: def.looped !== false,
+          hold_ticks: def.hold_ticks ?? 6,
+          forward_speed: def.forward_speed ?? (name.includes("walk") ? 1.6 : 0),
+          translate_toward_camera: def.translate_toward_camera ?? name.includes("walk"),
+          actor_id: aid,
+        });
+        setActiveClip(`${aid}:${def.name}`);
+        showToast(`${def.label || def.name} · ${aid}`);
+      } catch (e) {
+        showToast(String(e.message || e), "err");
+      }
+    },
+    [showToast],
+  );
 
   const applyKey = useCallback((key, down) => {
     const k = key === " " ? "space" : String(key).toLowerCase();
@@ -181,13 +215,30 @@ export function DragonStudio() {
       return;
     }
     if (k === "escape" && down) {
+      sim.stop_clip(null, { snap_home: true });
       sim.reset_ground();
+      setActiveClip(null);
       showToast("Reset free play");
       return;
     }
     if (k === "tab" && down) {
       const who = sim.cycle_active();
       showToast(`active ${who}`);
+      return;
+    }
+    // J = Wizard Joe walk loop · K = fly loop (NewsWiz cycles)
+    if (k === "j" && down) {
+      playNamedClip("walk_forward", "wizardjoe");
+      return;
+    }
+    if (k === "k" && down) {
+      playNamedClip("fly_forward", "wizardjoe");
+      return;
+    }
+    if (k === "u" && down) {
+      sim.stop_clip(null, { snap_home: true });
+      setActiveClip(null);
+      showToast("Clip stopped");
       return;
     }
 
@@ -210,7 +261,7 @@ export function DragonStudio() {
       i.move_x /= mag;
       i.move_y /= mag;
     }
-  }, [showToast]);
+  }, [showToast, playNamedClip]);
 
   // load plate + catalogs
   useEffect(() => {
@@ -222,6 +273,7 @@ export function DragonStudio() {
       plateRef.current = plate;
 
       const all = [];
+      const clipList = [];
       for (const char of CAST_ORDER) {
         const catj = await fetch(`/library/${char}/catalog.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
         const list = catj?.cell_library?.poses || [];
@@ -242,10 +294,28 @@ export function DragonStudio() {
             rows: p.rows,
           });
         }
+        const rawClips = catj?.clips || {};
+        for (const [cname, cval] of Object.entries(rawClips)) {
+          const frames = Array.isArray(cval) ? cval : cval?.frames || [];
+          if (!frames.length) continue;
+          clipList.push({
+            name: cname,
+            character: char,
+            frames,
+            looped: cval?.looped !== false,
+            hold_ticks: cval?.hold_ticks ?? (cval?.fps ? Math.round(60 / cval.fps) : 6),
+            forward_speed: cval?.forward_speed ?? (cname.includes("walk") ? 1.6 : 0),
+            translate_toward_camera:
+              cval?.translate_toward_camera ?? cname.includes("walk"),
+            label: cval?.label || cname.replace(/_/g, " "),
+          });
+        }
       }
       if (cancelled) return;
       posesRef.current = all;
       setPoses(all);
+      clipsRef.current = clipList;
+      setClips(clipList);
       // default pose per cast
       for (const char of CAST_ORDER) {
         const first = all.find((p) => p.character === char);
@@ -426,10 +496,14 @@ export function DragonStudio() {
       paint();
       const sim = simRef.current;
       if (sim) {
+        const clipActor = CAST_ORDER.map((id) => sim.actors[id]).find((a) => a?.clip);
+        const clipHud = clipActor?.clip
+          ? ` · ${clipActor.clip.name} ${clipActor.clip.index + 1}/${clipActor.clip.frames.length}`
+          : "";
         setHud({
           active: sim.active,
           tick: sim.tick,
-          note: `tick ${sim.tick} · ${sim.screen_relative ? "screen" : "world"} axes · poses ${posesRef.current.length}`,
+          note: `tick ${sim.tick} · ${sim.screen_relative ? "screen" : "world"} axes · poses ${posesRef.current.length}${clipHud}`,
         });
       }
       raf = requestAnimationFrame(loop);
@@ -530,7 +604,7 @@ export function DragonStudio() {
               <div className="status-chip">
                 <strong>LIVE</strong>
                 {hud.note}
-                <span className="keys">WASD · Space hop · F flight · Tab cycle</span>
+                <span className="keys">WASD · Space hop · F flight · Tab · J walk · K fly · U stop</span>
               </div>
               <div className="btn-grid">
                 <button type="button" className="icon-btn" onClick={() => applyKey("tab", true)}>Cycle</button>
@@ -538,14 +612,66 @@ export function DragonStudio() {
                 <button type="button" className="icon-btn" onClick={() => { applyKey("space", true); setTimeout(() => applyKey("space", false), 160); }}>Hop</button>
                 <button type="button" className="icon-btn" onClick={() => applyKey("m", true)}>Axes</button>
               </div>
+              {clips.some((c) => c.name === "walk_forward") ? (
+                <button
+                  type="button"
+                  className={`icon-btn${activeClip?.endsWith("walk_forward") ? " primary" : ""}`}
+                  style={{ width: "100%" }}
+                  onClick={() => playNamedClip("walk_forward", "wizardjoe")}
+                >
+                  Joe walk loop
+                </button>
+              ) : null}
+              {clips.some((c) => c.name === "fly_forward") ? (
+                <button
+                  type="button"
+                  className={`icon-btn${activeClip?.endsWith("fly_forward") ? " primary" : ""}`}
+                  style={{ width: "100%" }}
+                  onClick={() => playNamedClip("fly_forward", "wizardjoe")}
+                >
+                  Joe fly loop
+                </button>
+              ) : null}
+              {activeClip ? (
+                <button
+                  type="button"
+                  className="icon-btn"
+                  style={{ width: "100%" }}
+                  onClick={() => {
+                    simRef.current?.stop_clip(null, { snap_home: true });
+                    setActiveClip(null);
+                    showToast("Clip stopped");
+                  }}
+                >
+                  Stop clip
+                </button>
+              ) : null}
             </div>
           </nav>
 
           <section className="dv-poses">
             <div className="pose-head">
               <span className="pose-pill">{CAT_LABELS[cat]}</span>
-              <span className="pose-meta">{filtered.length} poses</span>
+              <span className="pose-meta">
+                {filtered.length} poses
+                {clips.length ? ` · ${clips.length} clips` : ""}
+              </span>
             </div>
+            {clips.length ? (
+              <div className="dv-featured" aria-label="Choreography clips">
+                {clips.map((c) => (
+                  <button
+                    key={`${c.character}-${c.name}`}
+                    type="button"
+                    className={`dv-chip${activeClip === `${c.character}:${c.name}` ? " is-active" : ""}`}
+                    onClick={() => playNamedClip(c.name, c.character)}
+                    title={`${c.character} · ${c.frames.length} keys`}
+                  >
+                    [{CHAR_TAG[c.character] || "?"}] {c.label || c.name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <input
               className="pose-filter"
               placeholder="Filter poses…"

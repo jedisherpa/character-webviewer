@@ -67,6 +67,8 @@ function makeActor(id, pos, face_sign = 1) {
     jump_was: false,
     flight_was: false,
     pose_override: null,
+    /** @type {null | { name: string, frames: string[], index: number, hold_ticks: number, ticks_in_frame: number, looped: boolean, forward_speed: number, translate_toward_camera: boolean }} */
+    clip: null,
   };
 }
 
@@ -112,6 +114,7 @@ export class WorldSim {
       a.land_hard = false;
       a.flap_energy = FLAP_MAX;
       a.pose_override = null;
+      a.clip = null;
       a.locomotion = "idle";
       a.pose_hint = "idle";
       a.zone = "ground";
@@ -122,6 +125,7 @@ export class WorldSim {
 
   set_active_pose(poseId) {
     const a = this.actors[this.active];
+    a.clip = null;
     a.pose_override = poseId;
     a.locomotion = "pose";
     a.pose_hint = "pose";
@@ -129,6 +133,61 @@ export class WorldSim {
 
   clear_pose_override() {
     this.actors[this.active].pose_override = null;
+    this.actors[this.active].clip = null;
+  }
+
+  /**
+   * Choreographed pose sequence (walk_forward / fly_forward loops).
+   * @param {string} name
+   * @param {string[]} frames pose_ids
+   * @param {{ looped?: boolean, hold_ticks?: number, forward_speed?: number, translate_toward_camera?: boolean, actor_id?: string }} [opts]
+   */
+  play_clip(name, frames, opts = {}) {
+    if (!frames?.length) throw new Error(`empty clip ${name}`);
+    const aid = opts.actor_id || this.active;
+    const a = this.actors[aid];
+    if (!a) throw new Error(`unknown actor ${aid}`);
+    a.clip = {
+      name,
+      frames: [...frames],
+      index: 0,
+      hold_ticks: Math.max(1, opts.hold_ticks ?? 6),
+      ticks_in_frame: 0,
+      looped: opts.looped !== false,
+      forward_speed: Number(opts.forward_speed) || 0,
+      translate_toward_camera: Boolean(opts.translate_toward_camera),
+    };
+    a.pose_override = frames[0];
+    a.locomotion = name.includes("walk") ? "walk" : name.includes("fly") ? "fly" : "clip";
+    a.pose_hint = a.locomotion;
+    a.vel = [0, 0, 0];
+    a.flight = false;
+    a.free_flight = false;
+  }
+
+  /**
+   * @param {string | null} [actor_id] null → stop all clips
+   * @param {{ snap_home?: boolean }} [opts]
+   */
+  stop_clip(actor_id = null, opts = {}) {
+    const snap_home = opts.snap_home !== false;
+    const targets =
+      actor_id != null
+        ? [this.actors[actor_id]].filter(Boolean)
+        : Object.values(this.actors).filter((a) => a.clip);
+    for (const a of targets) {
+      a.clip = null;
+      a.vel = [0, 0, 0];
+      a.flight = false;
+      a.free_flight = false;
+      if (snap_home) {
+        a.pos = [...this.home[a.id]];
+        a.pose_override = null;
+        a.locomotion = "idle";
+        a.pose_hint = "idle";
+        a.zone = "ground";
+      }
+    }
   }
 
   step(inp) {
@@ -139,7 +198,10 @@ export class WorldSim {
     if (inp.axes_toggle && !this._prev_axes) this.screen_relative = !this.screen_relative;
     this._prev_axes = inp.axes_toggle;
 
-    if (inp.reset && !this._prev_reset) this.reset_ground();
+    if (inp.reset && !this._prev_reset) {
+      this.reset_ground();
+      for (const a of Object.values(this.actors)) a.clip = null;
+    }
     this._prev_reset = inp.reset;
 
     if (inp.dpad_snap) {
@@ -149,11 +211,48 @@ export class WorldSim {
       a.flight = false;
       a.free_flight = false;
       a.pose_override = null;
+      a.clip = null;
     }
 
     for (const aid of CAST_ORDER) {
       const a = this.actors[aid];
+      this._step_clip(a);
+      if (a.clip) {
+        a.flight = false;
+        a.free_flight = false;
+        a.pos[1] = 0;
+        a.vel[1] = 0;
+        a.zone = "ground";
+        a.legal = true;
+        continue;
+      }
       this._step_actor(a, aid === this.active ? inp : createInput(), aid === this.active);
+    }
+  }
+
+  _step_clip(a) {
+    const c = a.clip;
+    if (!c?.frames?.length) return;
+    c.ticks_in_frame += 1;
+    if (c.ticks_in_frame >= c.hold_ticks) {
+      c.ticks_in_frame = 0;
+      if (c.index + 1 < c.frames.length) c.index += 1;
+      else if (c.looped) c.index = 0;
+      else {
+        a.clip = null;
+        return;
+      }
+    }
+    a.pose_override = c.frames[c.index];
+    a.locomotion = c.name.includes("walk") ? "walk" : c.name.includes("fly") ? "fly" : "clip";
+    a.pose_hint = a.locomotion;
+    if (c.translate_toward_camera && c.forward_speed) {
+      a.pos[0] += c.forward_speed * DT;
+      a.pos[0] = Math.max(-WORLD_XZ, Math.min(WORLD_XZ, a.pos[0]));
+      a.vel[0] = c.forward_speed;
+      a.vel[2] = 0;
+      a.facing_yaw = 0;
+      a.face_sign = 1;
     }
   }
 
@@ -289,6 +388,18 @@ export class WorldSim {
   }
 
   present_actor(a) {
+    let clip = null;
+    if (a.clip) {
+      const c = a.clip;
+      const len = c.frames.length || 1;
+      clip = {
+        name: c.name,
+        index: c.index,
+        len,
+        progress: (c.index + c.ticks_in_frame / Math.max(1, c.hold_ticks)) / len,
+        looped: c.looped,
+      };
+    }
     return {
       id: a.id,
       character: a.id,
@@ -308,6 +419,7 @@ export class WorldSim {
       land_hard: a.land_hard,
       anim_phase: a.anim_phase,
       flap_energy: a.flap_energy,
+      clip,
     };
   }
 }
