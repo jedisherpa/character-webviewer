@@ -1,3 +1,6 @@
+// DEPRECATED: cross-origin live API dock.
+// Character Studio now embeds NewsWiz (NewsWizEmbed) so session tokens stay
+// same-origin. This module is retained only for reference / local experiments.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HAS_LIVE_BACKEND, LIVE_API_BASE, liveFetch, probeLiveBackend } from "./config.js";
 import {

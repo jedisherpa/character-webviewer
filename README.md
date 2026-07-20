@@ -13,7 +13,9 @@ Three local visualizers, one static site:
 - **Vercel** — static visualizers (CDN, auto-deploy from GitHub)
 - **Hetzner** — optional live backend only (STT / chat / TTS / dual-view)
 
-Visualizers do **not** need a server process. Set `VITE_LIVE_API_BASE` when you want mic/chat/speech against the existing Prism/RobinSpeech Hetzner host.
+Visualizers do **not** need a server process. Live rant/chat/TTS runs inside **NewsWiz**
+(`newswiz` CLI) same-origin — set `VITE_NEWSWIZ_URL` so Joe studio can embed/open that SPA.
+Cross-origin API calls (and session-token mint from Vercel) are disabled on purpose.
 
 Full deploy notes: [docs/DEPLOY.md](docs/DEPLOY.md)
 
@@ -25,12 +27,12 @@ npm run sync-assets   # copies slim assets from ~/RobinSpeech + ~/dragonview
 npm run dev           # http://localhost:4400
 ```
 
-Optional live backend (local or Hetzner):
+Optional NewsWiz embed (local or hosted):
 
 ```bash
-VITE_LIVE_API_BASE=http://127.0.0.1:4311 npm run dev
-# or
-VITE_LIVE_API_BASE=https://your.hetzner.host npm run dev
+VITE_NEWSWIZ_URL=http://127.0.0.1:4311 npm run dev
+# or your deployed NewsWiz origin
+VITE_NEWSWIZ_URL=https://your-newswiz-host.example npm run dev
 ```
 
 ## Build / Vercel
@@ -45,7 +47,8 @@ Env (optional):
 
 | Name | Purpose |
 |------|---------|
-| `VITE_LIVE_API_BASE` | Hetzner HTTPS origin for live API (no trailing slash) |
+| `VITE_NEWSWIZ_URL` | NewsWiz SPA origin (embed + open) — same-origin to `newswiz` CLI |
+| `VITE_BIRD_LIVE_URL` | Optional Robin 41BirdLive SPA for hub open/iframe only |
 
 ## GitHub auto-deploy
 
@@ -53,10 +56,11 @@ Env (optional):
 2. Import in Vercel → connect the repo → Production branch `main`.
 3. Every push deploys; PRs get preview URLs.
 
-## Hetzner live backend
+## NewsWiz live backend
 
-Reuse **RobinSpeech** Hetzner deploy (`docs/hetzner-web-hosting.md`, workflow `deploy-hetzner.yml`).  
-Enable CORS for the Vercel origin, then set `VITE_LIVE_API_BASE` on Vercel and redeploy.
+Run **NewsWiz** (`newswiz` from `~/RobinSpeech`) locally or on Hetzner. Session tokens
+are minted only same-origin inside that SPA. Point `VITE_NEWSWIZ_URL` at it — do not
+point Character Studio at 41BirdLive for Joe rant APIs.
 
 ## Controls
 

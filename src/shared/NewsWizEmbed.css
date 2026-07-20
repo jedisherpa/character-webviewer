@@ -1,0 +1,122 @@
+.newswiz-embed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: min(22rem, 92vw);
+  max-width: 26rem;
+  padding: 0.75rem 0.85rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  background: rgba(10, 12, 16, 0.92);
+  color: #e8eef7;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+}
+
+.newswiz-embed.is-compact {
+  max-width: 20rem;
+}
+
+.newswiz-embed-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.newswiz-embed-head strong {
+  font: 800 0.78rem/1.1 system-ui, sans-serif;
+  letter-spacing: 0.12em;
+}
+
+.newswiz-sub {
+  margin: 0.25rem 0 0;
+  color: rgba(232, 238, 247, 0.55);
+  font-size: 0.68rem;
+  word-break: break-all;
+}
+
+.newswiz-pill {
+  flex: 0 0 auto;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font: 700 0.62rem/1 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.newswiz-pill.is-on {
+  color: #9dffb0;
+  border-color: rgba(157, 255, 176, 0.35);
+  background: rgba(40, 90, 50, 0.35);
+}
+
+.newswiz-pill.is-off {
+  color: rgba(255, 200, 160, 0.9);
+  border-color: rgba(255, 180, 120, 0.3);
+  background: rgba(80, 40, 20, 0.35);
+}
+
+.newswiz-hint {
+  margin: 0;
+  color: rgba(232, 238, 247, 0.72);
+  font: 500 0.75rem/1.4 system-ui, sans-serif;
+}
+
+.newswiz-hint code {
+  font-size: 0.72em;
+  color: #c8e6ff;
+}
+
+.newswiz-embed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.newswiz-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.1rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e8eef7;
+  font: 700 0.72rem/1 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.newswiz-btn.is-primary {
+  border-color: rgba(120, 190, 255, 0.45);
+  background: rgba(40, 90, 140, 0.45);
+  color: #dff0ff;
+}
+
+.newswiz-btn:hover {
+  border-color: rgba(180, 220, 255, 0.55);
+}
+
+.newswiz-frame-wrap {
+  position: relative;
+  width: 100%;
+  height: min(42vh, 22rem);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #07090c;
+}
+
+.newswiz-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #07090c;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
