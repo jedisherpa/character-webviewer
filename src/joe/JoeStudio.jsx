@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { WizardJoeStage } from "./WizardJoeStage.jsx";
 import { WorldSpacePanel } from "./WorldSpacePanel.jsx";
 import { GamepadPad } from "./GamepadPad.jsx";
+import { LiveDock } from "../shared/LiveDock.jsx";
 import {
   listAllPoses,
   listChoreography,
@@ -22,10 +23,38 @@ const STUDIO_CATEGORIES = [
   { id: "moves", label: "Moves & Skills", icon: "◎", mode: "poses", tags: null },
   { id: "test", label: "Test", icon: "◌", mode: "poses", tags: ["idle", "listen", "think", "speak", "core"] },
   { id: "animated", label: "Animated", icon: "✦", mode: "choreo", tags: null },
-  { id: "parade", label: "Parade", icon: "⇢", mode: "poses", tags: ["locomotion", "walk", "run", "jump", "flight", "fly"] },
+  {
+    id: "parade",
+    label: "Parade",
+    icon: "⇢",
+    mode: "poses",
+    tags: [
+      "locomotion",
+      "walk",
+      "walk_forward",
+      "walk_cycle",
+      "run",
+      "jump",
+      "flight",
+      "fly",
+      "fly_forward",
+      "flight_cycle",
+    ],
+  },
   { id: "held", label: "Held", icon: "✋", mode: "poses", tags: ["idle", "staff", "hand"] },
   { id: "accessories", label: "Accessories", icon: "✧", mode: "poses", tags: ["magic", "staff", "hero", "gesture"] },
   { id: "dance", label: "Dance", icon: "♪", mode: "poses", tags: ["dance", "dance_move", "celebrate"] },
+];
+
+/** NewsWiz choreography / pack highlights shown as one-tap strip */
+const FEATURED_CLIPS = [
+  { id: "walk_forward", label: "Walk loop" },
+  { id: "fly_forward", label: "Fly loop" },
+  { id: "dance_party", label: "Dance party" },
+  { id: "magic_cast", label: "Magic cast" },
+  { id: "conversation", label: "Conversation" },
+  { id: "flight_tour", label: "Flight tour" },
+  { id: "base250_full", label: "Full library" },
 ];
 
 function normalizePack(raw) {
@@ -164,6 +193,20 @@ export function JoeStudio() {
     return 0;
   }, [library]);
 
+  const clipNames = useMemo(() => {
+    const set = new Set();
+    if (library?.clips) {
+      Object.keys(library.clips).forEach((k) => set.add(k));
+    }
+    (library?.choreography || []).forEach((c) => c?.name && set.add(c.name));
+    return set;
+  }, [library]);
+
+  const featuredAvailable = useMemo(
+    () => FEATURED_CLIPS.filter((f) => clipNames.has(f.id)),
+    [clipNames],
+  );
+
   const category = STUDIO_CATEGORIES.find((c) => c.id === categoryId) || STUDIO_CATEGORIES[0];
   const allPoses = useMemo(() => listAllPoses(library), [library]);
   const choreo = useMemo(() => listChoreography(library), [library]);
@@ -248,10 +291,17 @@ export function JoeStudio() {
           }
           break;
         case "x":
-          if (phase === "tap") playClip("magic");
+          if (phase === "tap") {
+            if (clipNames.has("walk_forward")) playClip("walk_forward");
+            else playClip("walk");
+          }
           break;
         case "y":
-          if (phase === "tap") (dancing ? stopDance() : startDance());
+          if (phase === "tap") {
+            if (clipNames.has("fly_forward")) playClip("fly_forward");
+            else if (dancing) stopDance();
+            else startDance();
+          }
           break;
         case "start":
           if (phase === "tap") setPaused((p) => !p);
@@ -275,7 +325,18 @@ export function JoeStudio() {
           break;
       }
     },
-    [nudgeWorld, cycleCategory, stopDance, clearForce, playClip, dancing, startDance, resetWorld, pack],
+    [
+      nudgeWorld,
+      cycleCategory,
+      stopDance,
+      clearForce,
+      playClip,
+      dancing,
+      startDance,
+      resetWorld,
+      pack,
+      clipNames,
+    ],
   );
 
   return (
@@ -338,6 +399,26 @@ export function JoeStudio() {
                 <br />
                 {forceClip || forcePoseId || action || stage}
               </div>
+              {clipNames.has("walk_forward") ? (
+                <button
+                  type="button"
+                  className={`wj-icon-btn${forceClip === "walk_forward" ? " is-active is-primary" : ""}`}
+                  style={{ width: "100%" }}
+                  onClick={() => playClip("walk_forward")}
+                >
+                  Walk loop
+                </button>
+              ) : null}
+              {clipNames.has("fly_forward") ? (
+                <button
+                  type="button"
+                  className={`wj-icon-btn${forceClip === "fly_forward" ? " is-active is-primary" : ""}`}
+                  style={{ width: "100%" }}
+                  onClick={() => playClip("fly_forward")}
+                >
+                  Fly loop
+                </button>
+              ) : null}
               <button type="button" className="wj-icon-btn" style={{ width: "100%" }} onClick={() => (dancing ? stopDance() : startDance())}>
                 {dancing ? "Stop dance" : `Breakdance (${danceCount})`}
               </button>
@@ -368,6 +449,21 @@ export function JoeStudio() {
                 </label>
               </div>
             </div>
+            {featuredAvailable.length ? (
+              <div className="wj-featured" aria-label="NewsWiz featured clips">
+                {featuredAvailable.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={`wj-featured-chip${forceClip === f.id ? " is-active" : ""}`}
+                    onClick={() => playClip(f.id)}
+                    title={f.id}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <input
               className="wj-pose-filter"
               placeholder={category.mode === "choreo" ? "Filter clips…" : "Filter poses…"}
@@ -443,13 +539,34 @@ export function JoeStudio() {
                 <WorldSpacePanel world={world} onChange={onWorldChange} onReset={resetWorld} />
               </aside>
             ) : null}
+            <LiveDock
+              onStage={setStage}
+              onAction={(a) => {
+                setAction(a);
+                setForceClip("");
+                setForcePoseId("");
+                setDancing(false);
+                setPaused(false);
+              }}
+            />
             <div className="wj-gamepad-float">
-              <GamepadPad onAction={onGamepadAction} />
+              <GamepadPad
+                onAction={onGamepadAction}
+                labels={{
+                  x: "Walk loop",
+                  y: clipNames.has("fly_forward") ? "Fly loop" : "Dance",
+                }}
+              />
             </div>
             <div className="wj-preview-foot">
               <span>
                 now <code>{forcePoseId || forceClip || frameInfo?.clipName || action || stage}</code>
               </span>
+              {frameInfo?.pose ? (
+                <span>
+                  #{frameInfo.pose.runtimeId} {frameInfo.pose.name?.slice(0, 36)}
+                </span>
+              ) : null}
               <span style={{ marginLeft: "auto" }}>
                 zoom {(world?.zoom ?? 1).toFixed(2)}
               </span>

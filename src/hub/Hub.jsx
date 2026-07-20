@@ -8,7 +8,8 @@ const CARDS = [
     to: "/joe/alpha-hd",
     title: "Wizard Joe · Alpha HD",
     badge: "960×540",
-    blurb: "Production alpha set · 250 poses · character studio + gamepad",
+    blurb:
+      "NewsWiz production alphas · 270 poses · walk/fly loops · studio + gamepad · live mic/chat/rant when Hetzner is linked",
     accent: "teal",
   },
   {
@@ -89,9 +90,11 @@ export function Hub() {
 
         <footer className="hub-foot">
           <p>
-            Local ports: <code>4310</code> Base 250 · <code>4350</code> Alpha HD ·{" "}
-            <code>4370</code> Dragonview. Visualizers are client-side; set{" "}
-            <code>VITE_LIVE_API_BASE</code> to your Hetzner HTTPS origin for mic/chat/TTS.
+            Visualizers ship on <strong>Vercel</strong> (this repo). NewsWiz live
+            (mic / chat / rant / TTS) is a separate process on{" "}
+            <strong>Hetzner</strong> — set <code>VITE_LIVE_API_BASE</code> and enable
+            CORS. Local: <code>4310</code> Base 250 · <code>4350</code> Alpha HD ·{" "}
+            <code>4370</code> Dragonview · <code>4400</code> this hub.
           </p>
         </footer>
       </div>

@@ -299,6 +299,45 @@ a.wj-icon-btn:hover {
   padding: 14px 14px 10px;
 }
 
+/* NewsWiz featured choreography strip */
+.wj-featured {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 12px 10px;
+}
+
+.wj-featured-chip {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  font: 600 10px/1 system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  padding: 7px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wj-featured-chip:hover {
+  border-color: rgba(126, 200, 188, 0.45);
+  color: #e8edf5;
+}
+
+.wj-featured-chip.is-active {
+  background: linear-gradient(180deg, #8fd4c8, #6eb8ab);
+  border-color: transparent;
+  color: #0d1c19;
+}
+
+.wj-icon-btn.is-primary {
+  background: linear-gradient(180deg, #8fd4c8, #6eb8ab);
+  border-color: transparent;
+  color: #0c1a18;
+  font-weight: 600;
+}
+
 .wj-pose-pill {
   display: inline-flex;
   align-items: center;
