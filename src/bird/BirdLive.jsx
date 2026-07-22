@@ -38,7 +38,7 @@ export function BirdLive() {
           <h1>41 Bird Live</h1>
           <p>
             One-bird Prism runtime (NewsWiz + FishEye rant). Set{" "}
-            <code>VITE_BIRD_LIVE_URL</code> (or <code>VITE_LIVE_API_BASE</code>) to the Hetzner
+            <code>VITE_BIRD_LIVE_URL</code> to the Hetzner
             origin, e.g. <code>https://41birdlive.5.78.137.112.sslip.io</code>, then redeploy.
           </p>
         </div>

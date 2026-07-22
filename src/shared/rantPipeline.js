@@ -5,7 +5,18 @@
  *
  * Thin local port so the static Vercel app can call Hetzner without bundling
  * the full RobinSpeech frontend tree.
+ *
+ * Source catalog is the versioned contract under src/contracts/broadcastSources.js
+ * (snapshot of RobinSpeech birdLive) — do not re-declare divergent IDs here.
  */
+
+import {
+  BROADCAST_SOURCES,
+  isReadyScriptSource,
+  isResearchInputSource,
+  normalizeBroadcastSourceId,
+  sourceById,
+} from "../contracts/broadcastSources.js";
 
 export const WIZARD_JOE_RANT_FALLBACK_OPEN =
   "You hit rant. I opened the newsroom file labeled things everybody noticed but nobody said. Buckle up.";
@@ -20,50 +31,28 @@ export const RANT_REFILL_BACKOFF_DEFAULT_MS = 60 * 1000;
 export const DEFAULT_RANT_SOURCE_ID = "joe-news-ai";
 export const RANT_PREFERENCES_STORAGE_KEY = "robbinPrism.rantPreferences.v2";
 
-/** Same catalog as Prism / RobinSpeech rant sources (JoeNEWS + FishEye). */
-export const RANT_SOURCES = Object.freeze([
-  Object.freeze({
-    id: "joe-news-ai",
-    label: "JoeNEWS AI",
-    description: "Prepared AI news scripts from the JoeNEWS queue.",
-    family: "joe-news",
-    requiresResearchToken: false,
-  }),
-  Object.freeze({
-    id: "joe-news-general",
-    label: "JoeNEWS General",
-    description: "Prepared general-news scripts from the JoeNEWS queue.",
-    family: "joe-news",
-    requiresResearchToken: false,
-  }),
-  Object.freeze({
-    id: "bitcoin-fed",
-    label: "Bitcoin & Fed",
-    description: "Bitcoin markets and Federal Reserve policy.",
-    family: "fisheye",
-    requiresResearchToken: true,
-  }),
-  Object.freeze({
-    id: "ai-innovation",
-    label: "AI Innovation",
-    description: "Artificial-intelligence research, products, and industry shifts.",
-    family: "fisheye",
-    requiresResearchToken: true,
-  }),
-  Object.freeze({
-    id: "world-cup",
-    label: "World Cup",
-    description: "World Cup reporting, teams, and tournament developments.",
-    family: "fisheye",
-    requiresResearchToken: true,
-  }),
-]);
+/** Same catalog as Prism / RobinSpeech (JoeNEWS ready + FishEye research). */
+export const RANT_SOURCES = Object.freeze(
+  BROADCAST_SOURCES.filter((s) => s.id !== "manual").map((s) =>
+    Object.freeze({
+      id: s.id,
+      label: s.label,
+      description: s.description,
+      family: s.family,
+      role: s.role,
+      requiresResearchToken: s.requiresResearchToken,
+      backendQueuePath: s.backendQueuePath,
+    }),
+  ),
+);
 
 export const JOE_NEWS_RANT_SOURCES = Object.freeze(
   RANT_SOURCES.filter((s) => s.family === "joe-news"),
 );
 
 const RANT_SOURCE_IDS = new Set(RANT_SOURCES.map((s) => s.id));
+
+export { isReadyScriptSource, isResearchInputSource, normalizeBroadcastSourceId, sourceById };
 
 const RANT_BEAT_TAXONOMY = Object.freeze([
   Object.freeze({ role: "setup", action: "news" }),

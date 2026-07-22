@@ -1,0 +1,39 @@
+{
+  "overlay": {
+    "file": "bull_overlay_frame_001.png",
+    "streetFile": "frame_001_street_only.jpg",
+    "plateId": "frame_001",
+    "image": {
+      "width": 1312,
+      "height": 784
+    },
+    "ndcBox": {
+      "x0": 0.19893,
+      "y0": 0.14796,
+      "x1": 0.70655,
+      "y1": 0.85332
+    },
+    "world": {
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "torsoCenter": [
+        0.0,
+        3.5,
+        0.0
+      ],
+      "head": [
+        5.0,
+        4.2,
+        0.0
+      ],
+      "spineY": 7.8,
+      "hornY": 5.4,
+      "groundY": 0.0,
+      "occluderDepth": 14.2,
+      "occluderXMax": 3.2
+    }
+  }
+}

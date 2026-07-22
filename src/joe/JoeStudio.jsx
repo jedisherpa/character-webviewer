@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { WizardJoeStage } from "./WizardJoeStage.jsx";
 import { WorldSpacePanel } from "./WorldSpacePanel.jsx";
 import { GamepadPad } from "./GamepadPad.jsx";
-import { LiveDock } from "../shared/LiveDock.jsx";
+import { NewsWizEmbed } from "../shared/NewsWizEmbed.jsx";
 import {
   listAllPoses,
   listChoreography,
@@ -539,16 +539,8 @@ export function JoeStudio() {
                 <WorldSpacePanel world={world} onChange={onWorldChange} onReset={resetWorld} />
               </aside>
             ) : null}
-            <LiveDock
-              onStage={setStage}
-              onAction={(a) => {
-                setAction(a);
-                setForceClip("");
-                setForcePoseId("");
-                setDancing(false);
-                setPaused(false);
-              }}
-            />
+            {/* Live rant/chat/TTS: same-origin NewsWiz SPA (newswiz CLI), not cross-origin API. */}
+            <NewsWizEmbed />
             <div className="wj-gamepad-float">
               <GamepadPad
                 onAction={onGamepadAction}

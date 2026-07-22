@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import {
   BIRD_LIVE_URL,
   HAS_BIRD_LIVE,
-  HAS_LIVE_BACKEND,
-  LIVE_API_BASE,
+  HAS_NEWSWIZ,
+  NEWSWIZ_URL,
   probeBirdLive,
-  probeLiveBackend,
+  probeNewswiz,
 } from "../shared/config.js";
 import "./Hub.css";
 
@@ -14,11 +14,10 @@ const CARDS = [
   {
     to: "/41birdlive",
     title: "41 Bird Live",
-    badge: "Hetzner",
+    badge: "Robin",
     blurb:
-      "One-bird Prism runtime · NewsWiz + FishEye rant · same stack as local :4341 · full UI on Hetzner",
+      "One-bird Prism runtime on Hetzner · open full SPA (same-origin tokens there)",
     accent: "teal",
-    external: false,
   },
   {
     to: "/studio",
@@ -32,7 +31,7 @@ const CARDS = [
     to: "/joe/alpha-hd",
     title: "Wizard Joe · Alpha HD",
     badge: "960×540",
-    blurb: "NewsWiz character studio · 270 poses · walk/fly loops · live dock when linked",
+    blurb: "Pose studio · embed/open NewsWiz for live rant (same-origin to newswiz CLI)",
     accent: "violet",
   },
   {
@@ -52,11 +51,11 @@ const CARDS = [
 ];
 
 export function Hub() {
-  const [live, setLive] = useState({
+  const [newswiz, setNewswiz] = useState({
     ok: false,
-    configured: HAS_LIVE_BACKEND,
-    error: HAS_LIVE_BACKEND ? "probing…" : "static only",
-    base: LIVE_API_BASE || null,
+    configured: HAS_NEWSWIZ,
+    error: HAS_NEWSWIZ ? "probing…" : "not set",
+    url: NEWSWIZ_URL || null,
   });
   const [bird, setBird] = useState({
     ok: false,
@@ -67,8 +66,8 @@ export function Hub() {
 
   useEffect(() => {
     let cancelled = false;
-    probeLiveBackend().then((r) => {
-      if (!cancelled) setLive(r);
+    probeNewswiz().then((r) => {
+      if (!cancelled) setNewswiz(r);
     });
     probeBirdLive().then((r) => {
       if (!cancelled) setBird(r);
@@ -78,11 +77,11 @@ export function Hub() {
     };
   }, []);
 
-  const liveLabel = !live.configured
-    ? "Static only · set VITE_LIVE_API_BASE for live API"
-    : live.ok
-      ? `Live API · ${live.base}`
-      : `Live API unreachable · ${live.error || "error"}`;
+  const newswizLabel = !newswiz.configured
+    ? "NewsWiz URL not set (VITE_NEWSWIZ_URL) · pose studio is static-only"
+    : newswiz.ok
+      ? `NewsWiz · ${newswiz.url}`
+      : `NewsWiz unreachable · ${newswiz.error || "error"}`;
 
   const birdLabel = !bird.configured
     ? "41 Bird Live URL not set (VITE_BIRD_LIVE_URL)"
@@ -96,7 +95,7 @@ export function Hub() {
         <header className="hub-head">
           <div>
             <strong>Character Studio</strong>
-            <span>Production bay · Vercel static · 41BirdLive on Hetzner</span>
+            <span>Pose packs on Vercel · live speech via NewsWiz same-origin</span>
           </div>
           <a
             className="hub-gh"
@@ -108,9 +107,9 @@ export function Hub() {
           </a>
         </header>
 
-        <div className={`hub-live ${live.configured ? (live.ok ? "is-ok" : "is-bad") : "is-off"}`}>
+        <div className={`hub-live ${newswiz.configured ? (newswiz.ok ? "is-ok" : "is-bad") : "is-off"}`}>
           <span className="hub-live-dot" aria-hidden="true" />
-          {liveLabel}
+          {newswizLabel}
         </div>
         <div className={`hub-live ${bird.configured ? (bird.ok ? "is-ok" : "is-bad") : "is-off"}`}>
           <span className="hub-live-dot" aria-hidden="true" />
@@ -132,9 +131,9 @@ export function Hub() {
 
         <footer className="hub-foot">
           <p>
-            <strong>41 Bird Live</strong> is the one-bird Prism runtime on Hetzner (local port{" "}
-            <code>4341</code>). Joe studio uses the same live API when{" "}
-            <code>VITE_LIVE_API_BASE</code> points at that origin.
+            <strong>NewsWiz</strong> (<code>newswiz</code> CLI) owns session tokens, rant, and
+            tri-bus TTS. Character Studio embeds/opens that SPA — it does not call Hetzner APIs
+            cross-origin. Set <code>VITE_NEWSWIZ_URL</code> to the NewsWiz origin.
           </p>
         </footer>
       </div>

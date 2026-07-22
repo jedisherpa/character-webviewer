@@ -1,0 +1,11 @@
+change_id,source_contract,viewer_consumer,test,evidence
+RS-01,BroadcastSourceDefinition v1,src/contracts/broadcastSources.js + rantPipeline,npm run prove:parity,prove-parity-contracts.mjs
+RS-02,queue paths joe-news-ai/general,broadcastSources backendQueuePath,prove:parity distinct paths,SOURCE-CHANGE-INVENTORY.md
+RS-03,SceneDefinition v1,src/contracts/scenes.js + ProductionStudio select,prove:parity scenes,CORE_SCENES
+RS-04,Wall Street Bull stack,BullBackdrop + ProductionStudio paint,prove:parity path,bullWorldPath.js
+RS-05,VoiceProfileReference Joe Nate,voiceProfiles.js,prove:parity Nate exact,voiceProfiles.js
+RS-06,Preview/Program/Take,programState.js + ProductionStudio bar,prove:parity Take,programState.js
+RS-07,News Wiz provenance bounded,story cards via LiveDock (no 37-section reimpl),manual,docs
+RS-08,/41birdlive embed,BirdLive.jsx iframe,build green,existing
+RS-09,bull/voxel assets,public/birdLive/backgrounds,asset count,sync copy
+RS-10,fact-lock prepared scripts,rantPipeline backend calls,offline fail-safe,config.js liveFetch disabled
