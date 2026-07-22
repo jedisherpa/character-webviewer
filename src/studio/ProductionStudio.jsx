@@ -45,6 +45,8 @@ import {
   takeToProgram,
 } from "../contracts/programState.js";
 import { bullOrbitPath, pathValidation } from "../contracts/bullWorldPath.js";
+import { liveFetch, HAS_LIVE_BACKEND, probeLiveBackend, probeBirdLive } from "../shared/config.js";
+import { sourceById } from "../contracts/broadcastSources.js";
 import "./ProductionStudio.css";
 
 const CHAR_TAG = {
@@ -683,6 +685,61 @@ export function ProductionStudio() {
     setSourceStatus(`${id} ${enabled ? "enabled" : "disabled"} (Program unchanged)`);
   }, []);
 
+  const refreshLiveQueue = useCallback(async () => {
+    const sourceId = runtime.workingSelection.sourceId || "manual";
+    if (sourceId === "manual") {
+      setSourceStatus("Manual only — no remote queue");
+      return;
+    }
+    const def = sourceById(sourceId);
+    if (!def.backendQueuePath) {
+      setSourceStatus("No queue path for source");
+      return;
+    }
+    if (!HAS_LIVE_BACKEND) {
+      setSourceStatus("Live backend not configured");
+      return;
+    }
+    setSourceStatus(`Refreshing ${def.label}…`);
+    try {
+      const res = await liveFetch(def.backendQueuePath);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSourceStatus(`${def.label} queue HTTP ${res.status} (Program unchanged)`);
+        return;
+      }
+      const items = Array.isArray(data.items)
+        ? data.items
+        : Array.isArray(data.reports)
+          ? data.reports
+          : Array.isArray(data.sources)
+            ? data.sources
+            : [];
+      setSourceStatus(
+        `${def.label}: ${items.length} item(s) · role ${def.role} · Program unchanged`,
+      );
+      showToast(`${def.label} queue ${items.length}`);
+    } catch (e) {
+      setSourceStatus(`${def.label} error: ${e.message || e} (Program unchanged)`);
+    }
+  }, [runtime.workingSelection.sourceId, showToast]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [nw, bird] = await Promise.all([probeLiveBackend(), probeBirdLive()]);
+      if (cancelled) return;
+      if (nw.ok || bird.ok) {
+        setSourceStatus(
+          `Live: NewsWiz ${nw.ok ? "up" : "down"} · 41Bird ${bird.ok ? "up" : "down"}`,
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const runBullPathDemo = useCallback(() => {
     const sim = simRef.current;
     if (!sim) return;
@@ -1288,6 +1345,26 @@ export function ProductionStudio() {
           </button>
           <button type="button" className="ps-btn" onClick={runBullPathDemo} title="Orbit bull then land in front">
             Bull path
+          </button>
+          <label className="ps-parity-label" htmlFor="ps-source-select">
+            Active source
+          </label>
+          <select
+            id="ps-source-select"
+            value={runtime.workingSelection.sourceId}
+            onChange={(e) =>
+              setRuntime((s) => selectWorking(s, { sourceId: e.target.value }))
+            }
+            aria-label="Select broadcast source for working selection"
+          >
+            {BROADCAST_SOURCES.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+          <button type="button" className="ps-btn" onClick={refreshLiveQueue}>
+            Refresh queue
           </button>
         </div>
         <div className="ps-parity-group ps-parity-meta">
