@@ -119,6 +119,15 @@ export const FLEET_CARDS = Object.freeze([
     probe: "health",
   },
   {
+    id: "pbw-station-home",
+    title: "Prism Station Home",
+    badge: "PBW",
+    blurb: "Operator workstation · #/home Preview/Program transport",
+    accent: "teal",
+    href: `${FLEET_BIRD_LIVE}/#/home`,
+    probe: "origin",
+  },
+  {
     id: "wizardjoe",
     title: "Wizard Joe host",
     badge: "SPA",
