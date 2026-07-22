@@ -31,32 +31,19 @@ export function BullBackdrop({
     setOverlayReady(false);
   }, [plateUrl, overlaySrc]);
 
-  const overlayStyle = ndcBox
-    ? {
-        position: "absolute",
-        left: `${ndcBox.x0 * 100}%`,
-        top: `${ndcBox.y0 * 100}%`,
-        width: `${(ndcBox.x1 - ndcBox.x0) * 100}%`,
-        height: `${(ndcBox.y1 - ndcBox.y0) * 100}%`,
-        objectFit: "contain",
-        pointerEvents: "none",
-        zIndex: 2,
-      }
-    : {
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        objectFit: "contain",
-        pointerEvents: "none",
-        zIndex: 2,
-      };
+  // ndcBox is the opaque-content AABB for world/occluder math only.
+  // The transparent bull PNG is full-frame (same pixel grid as the street plate).
+  // Sizing it into the NDC box double-shrinks the bull — full-bleed cover keeps
+  // registration (parity with one-bird-live StageCanvas / BullStageBackdrop).
 
   return (
     <div
       className={`bull-backdrop ${useStack ? "is-depth-stack" : ""} ${className}`.trim()}
       data-fit={fit}
       data-depth-stack={useStack ? "true" : "false"}
+      data-overlay-ndc={
+        ndcBox ? `${ndcBox.x0},${ndcBox.y0},${ndcBox.x1},${ndcBox.y1}` : undefined
+      }
       aria-hidden="true"
     >
       <img
@@ -72,7 +59,6 @@ export function BullBackdrop({
           src={overlaySrc}
           alt=""
           draggable={false}
-          style={overlayStyle}
           onLoad={() => setOverlayReady(true)}
         />
       ) : null}
