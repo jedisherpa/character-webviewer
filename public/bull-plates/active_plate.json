@@ -1,0 +1,35 @@
+{
+  "id": "frame_001",
+  "file": "frame_001_Wide_Establishing_Orbit_0deg.jpg",
+  "shot_name": "Wide_Establishing_Orbit",
+  "notes": "Wide low-heroic establishing, orbit 0deg (front). Bull charges toward camera. +X toward camera/head, +Z bull right = screen right.",
+  "camera": {
+    "description": "Front low-heroic, eye on +X looking at origin (face of bull). flip_x aligns bull-right to screen-right.",
+    "eye": [16.0, 2.4, 0.0],
+    "target": [1.0, 3.2, 0.0],
+    "up": [0.0, 1.0, 0.0],
+    "fov_y_deg": 40.0,
+    "orbit_deg": 0,
+    "radius": 16.0,
+    "elevation": 2.4,
+    "flip_x": true,
+    "flip_z": false
+  },
+  "image": {
+    "width": 1312,
+    "height": 784
+  },
+  "bird_draw": {
+    "ref_height_units": 0.9,
+    "pixels_per_unit_at_ref_depth": 56,
+    "scale_multiplier": 2.0,
+    "feet_anchor": 0.92
+  },
+  "world": {
+    "origin": "ground under bull torso center",
+    "plus_x": "charge direction (head/nose) — toward camera on this plate",
+    "plus_y": "up",
+    "plus_z": "bull right — screen right on this plate",
+    "ground_y": 0.0
+  }
+}

@@ -1,7 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CAST_ORDER, CHAR_LABEL, WorldSim, createInput } from "../dragon/world.js";
 import { GamepadPad } from "../joe/GamepadPad.jsx";
+import { PerformerSwitch } from "../shared/PerformerSwitch.jsx";
+import {
+  normalizePerformer,
+  writeStoredPerformer,
+} from "../shared/performerModes.js";
+import { StageFullscreenButton } from "../shared/StageFullscreenButton.jsx";
+import { useStageFullscreen } from "../shared/useStageFullscreen.js";
 import {
   BINDABLE_BUTTONS,
   DEFAULT_GAMEPAD_BINDINGS,
@@ -18,6 +25,26 @@ import {
   upsertSequence,
 } from "./sequenceStore.js";
 import { CONTROL_SURFACES, GAMEPAD_DEFAULTS_DOC, KEYBOARD_CHEATSHEET } from "./controlsDoc.js";
+import {
+  BROADCAST_SOURCES,
+  defaultSourceEnabledMap,
+  normalizeSourceEnabledMap,
+  toggleSourceEnabled,
+} from "../contracts/broadcastSources.js";
+import {
+  CORE_SCENES,
+  ORIGINAL_WALL_STREET_BULL,
+  isOriginalBullScene,
+  sceneById,
+} from "../contracts/scenes.js";
+import { WIZARD_JOE_NATE_PROFILE, joeProductionVoiceSummary } from "../contracts/voiceProfiles.js";
+import {
+  createEmptyRuntimeState,
+  loadPreview,
+  selectWorking,
+  takeToProgram,
+} from "../contracts/programState.js";
+import { bullOrbitPath, pathValidation } from "../contracts/bullWorldPath.js";
 import "./ProductionStudio.css";
 
 const CHAR_TAG = {
@@ -158,6 +185,12 @@ const EMPTY_SEQ = () => ({
 
 export function ProductionStudio() {
   const canvasRef = useRef(null);
+  const stageHostRef = useRef(null);
+  const {
+    active: stageFullscreen,
+    toggle: toggleStageFullscreen,
+    exit: exitStageFullscreen,
+  } = useStageFullscreen(stageHostRef);
   const simRef = useRef(null);
   const inputRef = useRef(createInput());
   const plateRef = useRef({});
@@ -190,7 +223,13 @@ export function ProductionStudio() {
   const [playing, setPlaying] = useState(false);
   const [playIdx, setPlayIdx] = useState(-1);
   const [paused, setPaused] = useState(false);
-  const [activeActor, setActiveActor] = useState("dragon");
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const castParam = searchParams.get("cast");
+  const [activeActor, setActiveActor] = useState(() => {
+    const fromQuery = normalizePerformer(castParam);
+    return CAST_ORDER.includes(fromQuery) ? fromQuery : "dragon";
+  });
 
   recordRef.current = recording;
 
@@ -199,6 +238,36 @@ export function ProductionStudio() {
     window.clearTimeout(showToast._t);
     showToast._t = window.setTimeout(() => setToast(null), 2200);
   }, []);
+
+  useEffect(() => {
+    const fromQuery = normalizePerformer(castParam);
+    if (CAST_ORDER.includes(fromQuery)) {
+      setActiveActor(fromQuery);
+      if (simRef.current) simRef.current.active = fromQuery;
+    }
+  }, [castParam]);
+
+  const onPerformerChange = useCallback(
+    (mode) => {
+      const next = normalizePerformer(mode);
+      writeStoredPerformer(next);
+      if (next === "robin") {
+        navigate("/41birdlive");
+        return;
+      }
+      if (next === "wizard") {
+        navigate("/joe/alpha-hd");
+        return;
+      }
+      if (CAST_ORDER.includes(next)) {
+        if (simRef.current) simRef.current.active = next;
+        setActiveActor(next);
+        navigate(`/studio?cast=${next}`, { replace: true });
+        showToast(CHAR_LABEL[next] || next);
+      }
+    },
+    [navigate, showToast],
+  );
 
   const togglePanel = useCallback((id) => {
     setPanels((p) => {
@@ -420,6 +489,21 @@ export function ProductionStudio() {
     [bindings, executeBinding],
   );
 
+  const [runtime, setRuntime] = useState(() =>
+    createEmptyRuntimeState({
+      sceneId: ORIGINAL_WALL_STREET_BULL.id,
+      actorId: "wizardjoe",
+      sourceId: "manual",
+      sourcesEnabled: defaultSourceEnabledMap(),
+    }),
+  );
+  const [sourceStatus, setSourceStatus] = useState("");
+  const sceneRef = useRef(sceneById(ORIGINAL_WALL_STREET_BULL.id));
+  const bullOverlayRef = useRef(null);
+  const runtimeRef = useRef(runtime);
+  runtimeRef.current = runtime;
+  sceneRef.current = sceneById(runtime.preview.sceneId || runtime.workingSelection.sceneId);
+
   // load assets
   useEffect(() => {
     simRef.current = new WorldSim();
@@ -438,9 +522,9 @@ export function ProductionStudio() {
         .catch(() => ({}));
       if (cancelled) return;
       // Force low-floor production plate defaults
-      plateRef.current = {
+      const nextPlate = {
         ...plate,
-        background: plate.background || "#ffffff",
+        background: plate.background || "#0b0a09",
         camera: {
           ...(plate.camera || {}),
           eye: plate.camera?.eye || [13.5, 3.8, 7.2],
@@ -454,6 +538,25 @@ export function ProductionStudio() {
           screen_y_offset: plate.bird_draw?.screen_y_offset ?? 28,
         },
       };
+      // Default: Original Wall Street Bull street plate (world rear)
+      const bg = new Image();
+      bg.decoding = "async";
+      bg.src = ORIGINAL_WALL_STREET_BULL.streetFile;
+      bg.onload = () => {
+        nextPlate.__bgImg = bg;
+      };
+      nextPlate.__bgImg = bg;
+      const overlay = new Image();
+      overlay.decoding = "async";
+      overlay.src = ORIGINAL_WALL_STREET_BULL.overlayFile;
+      overlay.onload = () => {
+        bullOverlayRef.current = overlay;
+        nextPlate.__bullOverlay = overlay;
+      };
+      nextPlate.__bullOverlay = overlay;
+      nextPlate.__ndcBox = ORIGINAL_WALL_STREET_BULL.ndcBox;
+      nextPlate.__sceneKind = "wall-street-bull";
+      plateRef.current = nextPlate;
 
       const all = [];
       const clipList = [];
@@ -518,6 +621,92 @@ export function ProductionStudio() {
     return p;
   }, []);
 
+  const applySceneToPlate = useCallback(
+    async (sceneId) => {
+      const scene = sceneById(sceneId);
+      const plate = { ...(plateRef.current || {}) };
+      plate.__sceneKind = scene.kind || "white";
+      plate.__ndcBox = scene.ndcBox || null;
+      if (scene.kind === "wall-street-bull") {
+        const street = await loadImg(scene.streetFile || ORIGINAL_WALL_STREET_BULL.streetFile);
+        const overlay = await loadImg(scene.overlayFile || ORIGINAL_WALL_STREET_BULL.overlayFile);
+        plate.__bgImg = street;
+        plate.__bullOverlay = overlay;
+        bullOverlayRef.current = overlay;
+        plate.__ndcBox = scene.ndcBox || ORIGINAL_WALL_STREET_BULL.ndcBox;
+      } else if (scene.kind === "voxel" && scene.backgroundImage) {
+        plate.__bgImg = await loadImg(scene.backgroundImage);
+        plate.__bullOverlay = null;
+      } else if (scene.kind === "white") {
+        plate.__bgImg = null;
+        plate.__bullOverlay = null;
+        plate.background = "#f4f6fa";
+      } else {
+        plate.__bgImg = await loadImg("/bull-plates/frame_001_Wide_Establishing_Orbit_0deg.jpg");
+        plate.__bullOverlay = null;
+      }
+      plateRef.current = plate;
+      showToast(`Preview scene: ${scene.name}`);
+    },
+    [loadImg, showToast],
+  );
+
+  const onSelectScene = useCallback(
+    (sceneId) => {
+      setRuntime((s) => selectWorking(s, { sceneId }));
+      // Working only — does not mutate Program
+    },
+    [],
+  );
+
+  const onLoadPreview = useCallback(() => {
+    setRuntime((s) => {
+      const next = loadPreview(s);
+      applySceneToPlate(next.preview.sceneId);
+      return next;
+    });
+    showToast("Loaded working → Preview");
+  }, [applySceneToPlate, showToast]);
+
+  const onTake = useCallback(() => {
+    setRuntime((s) => takeToProgram(s));
+    showToast("TAKE · Preview → Program");
+  }, [showToast]);
+
+  const onToggleSource = useCallback((id, enabled) => {
+    setRuntime((s) => {
+      const before = s;
+      const sourcesEnabled = toggleSourceEnabled(s.sourcesEnabled, id, enabled);
+      // Must not touch Program
+      return { ...before, sourcesEnabled: normalizeSourceEnabledMap(sourcesEnabled) };
+    });
+    setSourceStatus(`${id} ${enabled ? "enabled" : "disabled"} (Program unchanged)`);
+  }, []);
+
+  const runBullPathDemo = useCallback(() => {
+    const sim = simRef.current;
+    if (!sim) return;
+    const birdId = sim.active === "wizardjoe" ? "kingfisher" : sim.active;
+    const actor = sim.actors[birdId] || sim.actors.kingfisher;
+    if (!actor) return;
+    let step = 0;
+    const steps = 90;
+    showToast("Bull orbit path demo");
+    const tick = () => {
+      const pos = bullOrbitPath(step / steps);
+      actor.pos = [pos.x, pos.y, pos.z];
+      actor.flight = !pos.onGround;
+      step += 1;
+      if (step <= steps) window.setTimeout(tick, 33);
+      else {
+        actor.flight = false;
+        actor.pos[1] = 0;
+        showToast("Landed in front of bull");
+      }
+    };
+    tick();
+  }, [showToast]);
+
   // sim + paint loop
   useEffect(() => {
     let raf = 0;
@@ -535,19 +724,21 @@ export function ProductionStudio() {
       const plate = plateRef.current || {};
       const cam = cameraFromPlate(plate);
 
-      ctx.fillStyle = plate.background || "#ffffff";
-      ctx.fillRect(0, 0, W, H);
-
-      // low floor ellipse
-      ctx.fillStyle = "rgba(15, 23, 42, 0.07)";
-      ctx.beginPath();
-      ctx.ellipse(W * 0.5, H * 0.88, W * 0.34, H * 0.055, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(15, 23, 42, 0.06)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.ellipse(W * 0.5, H * 0.88, W * 0.3, H * 0.045, 0, 0, Math.PI * 2);
-      ctx.stroke();
+      // Scene plate (street / voxel / white) — never a white sill by default
+      const plateImg = plateRef.current?.__bgImg;
+      const sceneKind = plateRef.current?.__sceneKind || "wall-street-bull";
+      if (sceneKind === "white") {
+        ctx.fillStyle = "#f4f6fa";
+        ctx.fillRect(0, 0, W, H);
+      } else if (plateImg?.complete && plateImg.naturalWidth) {
+        const scale = Math.max(W / plateImg.naturalWidth, H / plateImg.naturalHeight);
+        const dw = plateImg.naturalWidth * scale;
+        const dh = plateImg.naturalHeight * scale;
+        ctx.drawImage(plateImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      } else {
+        ctx.fillStyle = plate.background || "#0b0a09";
+        ctx.fillRect(0, 0, W, H);
+      }
 
       const cast = CAST_ORDER.map((id) => {
         const a = sim.present_actor(sim.actors[id]);
@@ -557,12 +748,21 @@ export function ProductionStudio() {
         return { ...a, preview: pose?.preview, runtime: pose?.runtime, pose_id: a.pose_id || pose?.id };
       });
 
+      const occluderDepth = ORIGINAL_WALL_STREET_BULL.world.occluderDepth;
       const drawn = cast
-        .map((b) => ({ b, pr: projectWorld(b.pos, cam, W, H) }))
+        .map((b) => {
+          const pr = projectWorld(b.pos, cam, W, H);
+          const behindBull =
+            sceneKind === "wall-street-bull" &&
+            pr &&
+            b.pos[2] > occluderDepth &&
+            Math.abs(b.pos[0]) < ORIGINAL_WALL_STREET_BULL.world.occluderXMax + 1.2;
+          return { b, pr, behindBull };
+        })
         .filter((x) => x.pr)
         .sort((a, b) => b.pr.depth - a.pr.depth);
 
-      for (const { b, pr } of drawn) {
+      const drawActor = ({ b, pr }) => {
         const active = b.id === sim.active;
         const scale = birdScalePx(pr.depth, plate, H) * (active ? 1.05 : 0.94);
         const url = b.runtime || b.preview;
@@ -607,7 +807,30 @@ export function ProductionStudio() {
           cached.then(draw);
         } else if (url) loadImg(url).then(draw);
         else draw(null);
+      };
+
+      // Birds behind bull (middle-world occluder)
+      for (const item of drawn.filter((d) => d.behindBull)) drawActor(item);
+
+      // Transparent Charging Bull at middle depth (not always-on-top mask)
+      const bullOverlay = plateRef.current?.__bullOverlay || bullOverlayRef.current;
+      const ndc = plateRef.current?.__ndcBox || ORIGINAL_WALL_STREET_BULL.ndcBox;
+      if (
+        sceneKind === "wall-street-bull" &&
+        bullOverlay?.complete &&
+        bullOverlay.naturalWidth &&
+        ndc
+      ) {
+        const x = ndc.x0 * W;
+        const y = ndc.y0 * H;
+        const w = (ndc.x1 - ndc.x0) * W;
+        const h = (ndc.y1 - ndc.y0) * H;
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(bullOverlay, x, y, w, h);
       }
+
+      // Birds in front of bull (including final landing)
+      for (const item of drawn.filter((d) => !d.behindBull)) drawActor(item);
     };
 
     const loop = (now) => {
@@ -861,6 +1084,16 @@ export function ProductionStudio() {
         </div>
 
         <div className="ps-cast-pills" aria-label="Cast">
+          <PerformerSwitch
+            value={
+              ["wizard", "robin"].includes(activeActor)
+                ? activeActor
+                : CAST_ORDER.includes(activeActor)
+                  ? activeActor
+                  : "dragon"
+            }
+            onChange={onPerformerChange}
+          />
           {CAST_ORDER.map((id) => (
             <button
               key={id}
@@ -869,6 +1102,7 @@ export function ProductionStudio() {
               onClick={() => {
                 if (simRef.current) simRef.current.active = id;
                 setActiveActor(id);
+                writeStoredPerformer(id);
                 showToast(CHAR_LABEL[id] || id);
               }}
             >
@@ -971,10 +1205,14 @@ export function ProductionStudio() {
           <Link className="ps-icon ps-icon-wide" to="/joe/alpha-hd" title="Classic Joe studio">
             Joe
           </Link>
+          <StageFullscreenButton active={stageFullscreen} onToggle={toggleStageFullscreen} />
         </div>
       </header>
 
-      <div className="ps-stage-wrap">
+      <div
+        ref={stageHostRef}
+        className={`ps-stage-wrap${stageFullscreen ? " is-stage-fullscreen" : ""}`}
+      >
         <canvas
           ref={canvasRef}
           width={1280}
@@ -982,6 +1220,11 @@ export function ProductionStudio() {
           tabIndex={0}
           aria-label="Production stage"
         />
+        {stageFullscreen ? (
+          <div className="stage-fs-exit-float">
+            <StageFullscreenButton active onToggle={exitStageFullscreen} />
+          </div>
+        ) : null}
       </div>
 
       <div className="ps-status">
@@ -989,6 +1232,74 @@ export function ProductionStudio() {
         {" · "}
         {hud}
         {dur ? ` · ${(dur / 1000).toFixed(1)}s` : ""}
+        {" · "}
+        <span title="Program only changes on Take">
+          PGM {sceneById(runtime.program.sceneId).name} · takes {runtime.program.takeCount || 0}
+        </span>
+        {activeActor === "wizardjoe" ? (
+          <span title="Backend TTS profile for Wizard Joe only">
+            {" · "}Joe voice Nate · {WIZARD_JOE_NATE_PROFILE.modelId} · speed{" "}
+            {WIZARD_JOE_NATE_PROFILE.voiceSettings.speed}
+          </span>
+        ) : null}
+      </div>
+
+      {/* Broadcast source + scene + Preview/Take — does not cover stage canvas */}
+      <div className="ps-parity-bar" role="region" aria-label="Broadcast and scene controls">
+        <div className="ps-parity-group">
+          <span className="ps-parity-label">Sources</span>
+          {BROADCAST_SOURCES.filter((s) => s.family !== "fisheye" || true).slice(0, 4).map((s) => (
+            <label key={s.id} className="ps-parity-check">
+              <input
+                type="checkbox"
+                checked={s.id === "manual" ? true : Boolean(runtime.sourcesEnabled?.[s.id])}
+                disabled={s.id === "manual"}
+                onChange={(e) => onToggleSource(s.id, e.target.checked)}
+              />
+              <span title={s.description}>
+                {s.label}
+                {s.role === "research-input" ? " (research)" : ""}
+              </span>
+            </label>
+          ))}
+          {sourceStatus ? <em className="ps-parity-note">{sourceStatus}</em> : null}
+        </div>
+        <div className="ps-parity-group">
+          <label className="ps-parity-label" htmlFor="ps-scene-select">
+            Scene (working)
+          </label>
+          <select
+            id="ps-scene-select"
+            value={runtime.workingSelection.sceneId}
+            onChange={(e) => onSelectScene(e.target.value)}
+            aria-label="Select scene into working selection"
+          >
+            {CORE_SCENES.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <button type="button" className="ps-btn" onClick={onLoadPreview}>
+            Load Preview
+          </button>
+          <button type="button" className="ps-btn ps-btn-take" onClick={onTake}>
+            Take
+          </button>
+          <button type="button" className="ps-btn" onClick={runBullPathDemo} title="Orbit bull then land in front">
+            Bull path
+          </button>
+        </div>
+        <div className="ps-parity-group ps-parity-meta">
+          <span>Working ≠ Preview ≠ Program</span>
+          <span>
+            Preview: {sceneById(runtime.preview.sceneId).name}
+          </span>
+          <span>
+            Joe Nate only · {joeProductionVoiceSummary().voiceId.slice(0, 8)}… · speed{" "}
+            {joeProductionVoiceSummary().speed}
+          </span>
+        </div>
       </div>
 
       <div className={`ps-pad-float${showPad ? "" : " is-hidden"}`}>
