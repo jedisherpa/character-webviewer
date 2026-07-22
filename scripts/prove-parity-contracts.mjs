@@ -8,6 +8,11 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  PROGRAM_MODES,
+  isProgramMode,
+  defaultReturnMode,
+} from "../src/contracts/programModes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
@@ -126,4 +131,11 @@ if (process.exitCode) {
   console.error("parity contract proofs FAILED");
   process.exit(1);
 }
+
+assert.equal(PROGRAM_MODES.length, 5, "five program modes");
+assert.ok(isProgramMode("news_channel"));
+assert.equal(defaultReturnMode("wizard_joe_special"), "news_channel");
+assert.equal(defaultReturnMode("bird_rant"), "news_channel");
+console.log("ok - PBW program modes");
+
 console.log("parity contract proofs passed");
