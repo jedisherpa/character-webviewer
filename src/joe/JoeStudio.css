@@ -523,20 +523,171 @@ a.wj-icon-btn:hover {
   line-height: 1.4;
 }
 
-/* —— right preview stage —— */
+/* —— right preview stage: full height of column (top→bottom) —— */
 .wj-preview {
   position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  background: #ffffff;
+  height: 100%;
+  background: #0b0a09;
 }
 
 .wj-preview .wizard-joe-stage {
   flex: 1 1 auto;
   min-height: 0;
+  background: transparent;
+  z-index: 2;
+  position: relative;
+}
+
+.wj-preview-stage-host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0b0a09;
+}
+
+.wj-preview-stage-host.is-bg-white {
   background: #ffffff;
+}
+
+.wj-preview.is-bg-white {
+  background: #ffffff;
+}
+
+.wj-preview-stage-host.is-bg-white .wizard-joe-stage-meta,
+.wj-preview-stage-host.is-bg-white .wizard-joe-stage-hint {
+  color: rgba(30, 41, 59, 0.45);
+}
+
+.wj-preview-stage-host.is-bg-white .wizard-joe-stage-floor {
+  display: block;
+}
+
+.wj-preview-stage-host .wizard-joe-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: transparent !important;
+}
+
+.wj-preview-stage-host .wizard-joe-stage-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Stage tools bay — NewsWiz + gamepad sit BELOW the plate (no float stack) */
+.wj-stage-bay {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(42vh, 360px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 10, 14, 0.98);
+  z-index: 4;
+}
+
+.wj-stage-bay-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px 0;
+  flex-shrink: 0;
+}
+
+.wj-stage-bay-tabs button {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  font: 700 0.7rem/1 system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.wj-stage-bay-tabs button.is-active {
+  color: #e8ffc8;
+  border-color: rgba(180, 255, 100, 0.45);
+  background: rgba(80, 120, 30, 0.35);
+}
+
+.wj-stage-bay-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 10px 10px;
+}
+
+.wj-stage-bay-panel {
+  min-height: 0;
+  height: 100%;
+}
+
+.wj-stage-bay-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px 12px;
+  min-height: 11rem;
+}
+
+.wj-stage-bay-controls .gp {
+  transform: none;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.wj-stage-bay-muted {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  text-align: center;
+  max-width: 28rem;
+}
+
+/* Legacy float class — no longer used on Joe stage; keep safe if reused */
+.wj-preview-stage-host .wj-gamepad-float {
+  display: none;
+}
+
+.wj-preview-stage-host .wizard-joe-stage-floor {
+  display: none;
+}
+
+.wj-preview-stage-host .wizard-joe-stage-meta,
+.wj-preview-stage-host .wizard-joe-stage-hint {
+  color: rgba(248, 250, 252, 0.5);
+}
+
+/* Full-screen character stage */
+.wj-preview-stage-host.is-stage-fullscreen {
+  display: flex;
+  flex-direction: column;
+}
+
+.wj-preview-stage-host.is-stage-fullscreen .wizard-joe-stage {
+  flex: 1 1 auto;
+  min-height: 100vh;
+  height: 100vh;
+}
+
+.wj-shell:has(.is-stage-fullscreen) .wj-topbar,
+.wj-shell:has(.is-stage-fullscreen) .wj-studio-main > :not(.wj-preview),
+.wj-shell:has(.is-stage-fullscreen) .wj-preview-foot {
+  /* chrome stays in DOM for state; stage host covers the viewport */
 }
 
 .wj-preview-foot {
@@ -545,10 +696,10 @@ a.wj-icon-btn:hover {
   align-items: center;
   gap: 8px 14px;
   padding: 10px 16px 12px;
-  border-top: 1px solid rgba(15, 23, 42, 0.1);
-  background: #f8fafc;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 16, 24, 0.92);
   font-size: 11px;
-  color: #64748b;
+  color: #94a3b8;
   z-index: 2;
 }
 

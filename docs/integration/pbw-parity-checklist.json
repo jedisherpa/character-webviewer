@@ -1,0 +1,221 @@
+{
+  "schemaVersion": "pbw.parity-checklist.v1",
+  "repo": "character-webviewer",
+  "branch": "feat/pbw-workstation-shell",
+  "pr": 4,
+  "adapterContract": "docs/integration/pbw-adapter-contract.md",
+  "updatedAt": "2026-07-22",
+  "proveCommand": "npm run prove:parity",
+  "items": [
+    {
+      "id": "route-hub",
+      "area": "routes",
+      "description": "Hub at / with fleet + studio cards + performer switch",
+      "status": "pass",
+      "evidence": "src/hub/Hub.jsx, src/App.jsx"
+    },
+    {
+      "id": "route-studio",
+      "area": "routes",
+      "description": "Native Production Studio at /studio",
+      "status": "pass",
+      "evidence": "src/studio/ProductionStudio.jsx"
+    },
+    {
+      "id": "route-41birdlive",
+      "area": "routes",
+      "description": "Embed / offline empty for 41 Bird Live at /41birdlive; /bird-live redirects",
+      "status": "pass",
+      "evidence": "src/bird/BirdLive.jsx, src/App.jsx"
+    },
+    {
+      "id": "route-joe",
+      "area": "routes",
+      "description": "/joe and /joe/:pack (alpha-hd, base250)",
+      "status": "pass",
+      "evidence": "src/joe/JoeStudio.jsx"
+    },
+    {
+      "id": "route-dragon",
+      "area": "routes",
+      "description": "Dragonview at /dragon",
+      "status": "pass",
+      "evidence": "src/dragon/DragonStudio.jsx"
+    },
+    {
+      "id": "performer-modes-vocab",
+      "area": "performer",
+      "description": "PERFORMER_MODES: robin, wizard, dragon, kingfisher, prism, speech, wizardjoe",
+      "status": "pass",
+      "evidence": "src/shared/performerModes.js; prove:parity adapter block"
+    },
+    {
+      "id": "performer-hub-routing",
+      "area": "performer",
+      "description": "routeForPerformerHub maps robin→/41birdlive, wizard→/joe/alpha-hd, dragon→/dragon, catalogs→/studio?cast=",
+      "status": "pass",
+      "evidence": "src/shared/performerModes.js; prove:parity"
+    },
+    {
+      "id": "performer-scene-affinity",
+      "area": "performer",
+      "description": "CORE_SCENES performer affinities + bull/voxel/bowl/white map to birdLive scene roles",
+      "status": "pass",
+      "evidence": "src/contracts/scenes.js; docs adapter §3"
+    },
+    {
+      "id": "scene-id-string-equality",
+      "area": "performer",
+      "description": "Exact scene id strings match one-bird-live sceneCatalog",
+      "status": "fail",
+      "evidence": "viewer uses bird.wall-street-bull.original / bird.location.*; live uses original-wall-street-bull / voxel-*; adapter maps by role"
+    },
+    {
+      "id": "bull-full-bleed",
+      "area": "stage",
+      "description": "Bull overlay full-bleed cover; NDC for occluder math only",
+      "status": "pass",
+      "evidence": "src/shared/BullBackdrop.jsx + CSS; commit 24dd4e0"
+    },
+    {
+      "id": "bull-path-clearance",
+      "area": "stage",
+      "description": "World path clears bull mass and lands in front",
+      "status": "pass",
+      "evidence": "prove:parity bull path; src/contracts/bullWorldPath.js"
+    },
+    {
+      "id": "stage-bg-toggle",
+      "area": "stage",
+      "description": "bull vs white stage background preference",
+      "status": "pass",
+      "evidence": "src/shared/stageBackground.js; Joe/Dragon stage tools"
+    },
+    {
+      "id": "newswiz-dock-bay",
+      "area": "dock",
+      "description": "NewsWiz same-origin embed docked under stage (not over gamepad/stage)",
+      "status": "pass",
+      "evidence": "NewsWizEmbed docked; JoeStudio stage bay tabs; commit c9928ab"
+    },
+    {
+      "id": "newswiz-no-foreign-api",
+      "area": "dock",
+      "description": "No browser calls to foreign NewsWiz /api/* with session tokens",
+      "status": "pass",
+      "evidence": "NewsWizEmbed design; LiveDock deprecated"
+    },
+    {
+      "id": "choreo-fly-speak",
+      "area": "choreography",
+      "description": "fly_speak action: flight Y band + speaking stage; body clip fly_forward",
+      "status": "pass",
+      "evidence": "locomotionController.js ACTION_SPEEDS.fly_speak; script120.js; ChoreographyHarness; prove:parity"
+    },
+    {
+      "id": "choreo-export-local-only",
+      "area": "choreography",
+      "description": "Harness CSV/manifest browser download only; no external broadcast",
+      "status": "pass",
+      "evidence": "artifacts/ gitignored; PR notes"
+    },
+    {
+      "id": "preview-program-take",
+      "area": "program",
+      "description": "Preview ≠ Program; Take only mutates Program; source toggle isolated",
+      "status": "pass",
+      "evidence": "src/contracts/programState.js; prove:parity"
+    },
+    {
+      "id": "program-modes-mirror",
+      "area": "program",
+      "description": "Five PBW program modes mirrored",
+      "status": "pass",
+      "evidence": "src/contracts/programModes.js; prove:parity"
+    },
+    {
+      "id": "nate-voice-joe-only",
+      "area": "voice",
+      "description": "Wizard Joe Nate profile exact; assertJoeNateOnly",
+      "status": "pass",
+      "evidence": "src/contracts/voiceProfiles.js; prove:parity"
+    },
+    {
+      "id": "broadcast-sources",
+      "area": "sources",
+      "description": "manual + joe-news-ai + joe-news-general with distinct queue paths",
+      "status": "pass",
+      "evidence": "src/contracts/broadcastSources.js; prove:parity"
+    },
+    {
+      "id": "program-bus",
+      "area": "not-parity",
+      "description": "Shared multi-operator Program bus / station transport",
+      "status": "fail",
+      "evidence": "Local programState only; no websocket program feed"
+    },
+    {
+      "id": "x-output",
+      "area": "not-parity",
+      "description": "X Output page / publish surface",
+      "status": "fail",
+      "evidence": "No /x-output or native X UI; birdLive #/x-output embed-only"
+    },
+    {
+      "id": "capture-encoder",
+      "area": "not-parity",
+      "description": "Program capture plan (local_file / OBS / backend RTMP) chrome-free",
+      "status": "fail",
+      "evidence": "one-bird-live captureBoundary.js not ported; choreography ≠ program capture"
+    },
+    {
+      "id": "full-shell-pages",
+      "area": "not-parity",
+      "description": "Native news desk, interactive, media, evidence, settings",
+      "status": "fail",
+      "evidence": "Embed-only via /41birdlive"
+    },
+    {
+      "id": "in-process-continuous-rant",
+      "area": "not-parity",
+      "description": "In-app continuous multi-story rant driver (non-iframe)",
+      "status": "fail",
+      "evidence": "NewsWiz iframe; LiveDock deprecated"
+    },
+    {
+      "id": "e2e-screenshot-matrix",
+      "area": "evidence",
+      "description": "Automated multi-route browser screenshot matrix",
+      "status": "unknown",
+      "evidence": "Manual / partial artifacts only; FINAL-REVIEW conditional pass"
+    },
+    {
+      "id": "prove-parity-green",
+      "area": "ci",
+      "description": "npm run prove:parity exits 0 on this branch",
+      "status": "pass",
+      "evidence": "scripts/prove-parity-contracts.mjs"
+    },
+    {
+      "id": "deploy",
+      "area": "ops",
+      "description": "This closeout task deploys production",
+      "status": "fail",
+      "evidence": "Constraint: no deploy from PBW closeout adapter work"
+    }
+  ],
+  "summary": {
+    "pass": 20,
+    "fail": 7,
+    "unknown": 1,
+    "remainingParityGaps": [
+      "Program bus (shared transport)",
+      "X Output",
+      "Capture / encoder boundary",
+      "Full birdLive shell pages (native)",
+      "In-process continuous rant",
+      "Scene id string equality (by design adapter)",
+      "E2E screenshot matrix (unknown / incomplete)"
+    ]
+  }
+}

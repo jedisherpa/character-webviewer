@@ -8,3 +8,5 @@ dist
 .env.*.local
 # public/ assets are committed so Vercel CI can build without sibling repos.
 .env*
+# Local choreography telemetry exports (browser downloads saved by operator)
+artifacts/

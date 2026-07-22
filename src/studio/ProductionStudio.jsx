@@ -869,21 +869,17 @@ export function ProductionStudio() {
       // Birds behind bull (middle-world occluder)
       for (const item of drawn.filter((d) => d.behindBull)) drawActor(item);
 
-      // Transparent Charging Bull at middle depth (not always-on-top mask)
+      // Transparent Charging Bull at middle depth (not always-on-top mask).
+      // Overlay PNG is full-frame (same grid as street plate). NDC box is
+      // occluder AABB only — drawing into that rect double-shrinks the bull.
       const bullOverlay = plateRef.current?.__bullOverlay || bullOverlayRef.current;
-      const ndc = plateRef.current?.__ndcBox || ORIGINAL_WALL_STREET_BULL.ndcBox;
       if (
         sceneKind === "wall-street-bull" &&
         bullOverlay?.complete &&
-        bullOverlay.naturalWidth &&
-        ndc
+        bullOverlay.naturalWidth
       ) {
-        const x = ndc.x0 * W;
-        const y = ndc.y0 * H;
-        const w = (ndc.x1 - ndc.x0) * W;
-        const h = (ndc.y1 - ndc.y0) * H;
         ctx.imageSmoothingEnabled = true;
-        ctx.drawImage(bullOverlay, x, y, w, h);
+        ctx.drawImage(bullOverlay, 0, 0, W, H);
       }
 
       // Birds in front of bull (including final landing)

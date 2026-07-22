@@ -7,6 +7,14 @@ import {
   applyDeskBeat,
   recipeBeatsForDesk,
 } from "../desk/index.js";
+import { StageFullscreenButton } from "../shared/StageFullscreenButton.jsx";
+import { useStageFullscreen } from "../shared/useStageFullscreen.js";
+import {
+  readStageBg,
+  STAGE_BG_BULL,
+  STAGE_BG_WHITE,
+  writeStageBg,
+} from "../shared/stageBackground.js";
 import "./DragonStudio.css";
 
 const CHAR_TAG = {
@@ -159,6 +167,19 @@ function Gamepad({ onSend }) {
 
 export function DragonStudio() {
   const canvasRef = useRef(null);
+  const stageHostRef = useRef(null);
+  const {
+    active: stageFullscreen,
+    toggle: toggleStageFullscreen,
+    exit: exitStageFullscreen,
+  } = useStageFullscreen(stageHostRef, { enableHotkey: false });
+  const [stageBg, setStageBg] = useState(readStageBg);
+  const stageBgWhite = stageBg === STAGE_BG_WHITE;
+  const stageBgRef = useRef(stageBg);
+  stageBgRef.current = stageBg;
+  const toggleStageBg = useCallback(() => {
+    setStageBg((cur) => writeStageBg(cur === STAGE_BG_WHITE ? STAGE_BG_BULL : STAGE_BG_WHITE));
+  }, []);
   const simRef = useRef(null);
   const inputRef = useRef(createInput());
   const imgCache = useRef(new Map());
@@ -374,6 +395,14 @@ export function DragonStudio() {
     (async () => {
       const plate = await fetch("/library/stage/active_plate.json").then((r) => r.json()).catch(() => ({}));
       if (cancelled) return;
+      plate.background = plate.background || "#0b0a09";
+      const bg = new Image();
+      bg.decoding = "async";
+      bg.src = "/bull-plates/frame_001_Wide_Establishing_Orbit_0deg.jpg";
+      bg.onload = () => {
+        plate.__bgImg = bg;
+      };
+      plate.__bgImg = bg;
       plateRef.current = plate;
 
       const all = [];
@@ -463,11 +492,20 @@ export function DragonStudio() {
       const plate = plateRef.current || {};
       const cam = cameraFromPlate(plate);
 
-      ctx.fillStyle = plate.background || "#ffffff";
-      ctx.fillRect(0, 0, W, H);
+      const useWhite = stageBgRef.current === STAGE_BG_WHITE;
+      const plateImg = !useWhite ? plateRef.current?.__bgImg : null;
+      if (plateImg?.complete && plateImg.naturalWidth) {
+        const scale = Math.max(W / plateImg.naturalWidth, H / plateImg.naturalHeight);
+        const dw = plateImg.naturalWidth * scale;
+        const dh = plateImg.naturalHeight * scale;
+        ctx.drawImage(plateImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      } else {
+        ctx.fillStyle = useWhite ? "#ffffff" : (plate.background || "#0b0a09");
+        ctx.fillRect(0, 0, W, H);
+      }
 
-      // soft ground ellipse
-      ctx.fillStyle = "rgba(0,0,0,0.06)";
+      // soft ground ellipse (stronger on white so feet read)
+      ctx.fillStyle = useWhite ? "rgba(15, 23, 42, 0.07)" : "rgba(0,0,0,0.06)";
       ctx.beginPath();
       ctx.ellipse(W * 0.5, H * 0.82, W * 0.28, H * 0.06, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -679,7 +717,8 @@ export function DragonStudio() {
               · Dragonview
             </strong>
             <span id="plate-label">
-              Dragon · Kingfisher · Wizard Joe · Prism · Speech · white stage · 5-cast
+              Dragon · Kingfisher · Wizard Joe · Prism · Speech ·{" "}
+              {stageBgWhite ? "white stage" : "bull stage"} · 5-cast
             </span>
           </div>
           <div className="dv-actions">
@@ -687,6 +726,16 @@ export function DragonStudio() {
             <span className="pill mute">web pad</span>
             <Link className="icon-btn" to="/joe/alpha-hd">Joe HD</Link>
             <Link className="icon-btn" to="/joe/base250">Joe 250</Link>
+            <button
+              type="button"
+              className={`icon-btn${stageBgWhite ? " primary" : ""}`}
+              onClick={toggleStageBg}
+              title={stageBgWhite ? "Switch to bull / dark stage" : "Switch to white stage"}
+              aria-pressed={stageBgWhite}
+            >
+              {stageBgWhite ? "White" : "Bull"}
+            </button>
+            <StageFullscreenButton active={stageFullscreen} onToggle={toggleStageFullscreen} />
             <button type="button" className="icon-btn primary" onClick={() => applyKey("escape", true)}>
               Reset
             </button>
@@ -886,8 +935,17 @@ export function DragonStudio() {
             ) : null}
           </section>
 
-          <section className="dv-preview">
+          <section
+            ref={stageHostRef}
+            className={`dv-preview${stageFullscreen ? " is-stage-fullscreen" : ""}${stageBgWhite ? " is-bg-white" : " is-bg-bull"}`}
+            data-stage-bg={stageBg}
+          >
             <canvas ref={canvasRef} width={960} height={540} tabIndex={0} />
+            {stageFullscreen ? (
+              <div className="stage-fs-exit-float">
+                <StageFullscreenButton active onToggle={exitStageFullscreen} />
+              </div>
+            ) : null}
             <div className="dv-gamepad">
               <Gamepad onSend={applyKey} />
             </div>

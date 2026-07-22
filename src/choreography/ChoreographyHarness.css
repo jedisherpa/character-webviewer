@@ -1,0 +1,166 @@
+.cw-choreo {
+  position: relative;
+  z-index: 30;
+  font-family: var(--wj-font, system-ui, sans-serif);
+}
+
+.cw-choreo-toggle {
+  border: 1px solid rgba(126, 200, 188, 0.45);
+  background: rgba(18, 22, 31, 0.92);
+  color: #d7f3ed;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font: 600 0.72rem/1.2 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.cw-choreo-toggle:hover,
+.cw-choreo-toggle:focus-visible {
+  border-color: #7ec8bc;
+  outline: 2px solid rgba(126, 200, 188, 0.35);
+  outline-offset: 2px;
+}
+
+.cw-choreo-panel {
+  margin-top: 0.5rem;
+  width: min(360px, 92vw);
+  padding: 0.75rem 0.85rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, #1c2230 0%, #141924 100%);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  color: #e8edf5;
+}
+
+.cw-choreo-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.65rem;
+}
+
+.cw-choreo-head strong {
+  font-size: 0.82rem;
+}
+
+.cw-choreo-meta {
+  color: #8b95a8;
+  font: 500 0.68rem/1.3 ui-monospace, Menlo, monospace;
+}
+
+.cw-choreo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.cw-choreo-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font: 600 0.65rem/1.2 system-ui, sans-serif;
+  color: #8b95a8;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cw-choreo-grid label:last-child {
+  grid-column: 1 / -1;
+}
+
+.cw-choreo-grid input,
+.cw-choreo-grid select {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0f131b;
+  color: #e8edf5;
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  font: 500 0.8rem/1.2 system-ui, sans-serif;
+}
+
+.cw-choreo-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 0.4rem;
+}
+
+.cw-choreo-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #5aaf9f, #7ec8bc);
+  transition: width 120ms linear;
+}
+
+.cw-choreo-status {
+  margin: 0 0 0.65rem;
+  color: #aeb7c8;
+  font: 500 0.72rem/1.35 ui-monospace, Menlo, monospace;
+}
+
+.cw-choreo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+}
+
+.cw-choreo-btn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #232a3a;
+  color: #e8edf5;
+  border-radius: 9px;
+  padding: 0.45rem 0.7rem;
+  font: 600 0.72rem/1.2 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.cw-choreo-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cw-choreo-btn.primary {
+  background: #5aaf9f;
+  border-color: #7ec8bc;
+  color: #0c1514;
+}
+
+.cw-choreo-btn.danger {
+  background: rgba(232, 106, 106, 0.2);
+  border-color: #e86a6a;
+  color: #ffd4d4;
+}
+
+.cw-choreo-help {
+  margin: 0;
+  color: #8b95a8;
+  font: 500 0.68rem/1.45 system-ui, sans-serif;
+}
+
+.cw-choreo-help code {
+  font-family: ui-monospace, Menlo, monospace;
+  color: #7ec8bc;
+}
+
+/* Docked on studio stage corner without covering the full performer when closed */
+.wj-preview-stage-host .cw-choreo {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  max-width: calc(100% - 1.2rem);
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.wj-preview-stage-host .cw-choreo:not(.is-open) .cw-choreo-toggle {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Keep panel usable in fullscreen stage */
+.wj-preview-stage-host.is-stage-fullscreen .cw-choreo {
+  top: 1rem;
+  left: 1rem;
+}

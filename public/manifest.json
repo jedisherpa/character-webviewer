@@ -1,22 +1,15 @@
 {
-  "builtAt": "2026-07-20T01:34:24.422162Z",
+  "builtAt": "2026-07-22T08:33:58.504Z",
   "visualizers": [
     {
-      "id": "production-studio",
-      "path": "/studio",
-      "features": [
-        "sequence",
-        "record",
-        "gamepad-map",
-        "drawers",
-        "low-floor"
-      ]
+      "id": "joe-base250",
+      "path": "/joe/base250",
+      "pack": "base250"
     },
     {
       "id": "joe-alpha-hd",
       "path": "/joe/alpha-hd",
-      "pack": "alpha-hd",
-      "poses": 270
+      "pack": "alpha-hd"
     },
     {
       "id": "dragonview",
@@ -28,11 +21,6 @@
         "prism",
         "speech"
       ]
-    },
-    {
-      "id": "joe-base250",
-      "path": "/joe/base250",
-      "pack": "base250"
     }
   ]
 }

@@ -1,9 +1,23 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { WizardJoeStage } from "./WizardJoeStage.jsx";
 import { WorldSpacePanel } from "./WorldSpacePanel.jsx";
 import { GamepadPad } from "./GamepadPad.jsx";
 import { NewsWizEmbed } from "../shared/NewsWizEmbed.jsx";
+import { PerformerSwitch } from "../shared/PerformerSwitch.jsx";
+import {
+  normalizePerformer,
+  writeStoredPerformer,
+} from "../shared/performerModes.js";
+import { BullBackdrop } from "../shared/BullBackdrop.jsx";
+import { StageFullscreenButton } from "../shared/StageFullscreenButton.jsx";
+import { useStageFullscreen } from "../shared/useStageFullscreen.js";
+import {
+  readStageBg,
+  STAGE_BG_BULL,
+  STAGE_BG_WHITE,
+  writeStageBg,
+} from "../shared/stageBackground.js";
 import {
   listAllPoses,
   listChoreography,
@@ -17,6 +31,10 @@ import {
   readWorld,
   writeWorld,
 } from "./wizardJoeWorldSpace.js";
+import {
+  ChoreographyHarness,
+  useChoreographyFrameBridge,
+} from "../choreography/ChoreographyHarness.jsx";
 import "./JoeStudio.css";
 
 const STUDIO_CATEGORIES = [
@@ -64,6 +82,24 @@ function normalizePack(raw) {
   return "alpha-hd";
 }
 
+function routeForPerformer(mode) {
+  switch (normalizePerformer(mode)) {
+    case "robin":
+      return "/41birdlive";
+    case "dragon":
+      return "/dragon";
+    case "wizard":
+      return "/joe/alpha-hd";
+    case "kingfisher":
+    case "prism":
+    case "speech":
+    case "wizardjoe":
+      return `/studio?cast=${normalizePerformer(mode)}`;
+    default:
+      return "/joe/alpha-hd";
+  }
+}
+
 function libraryUrlFor(pack) {
   if (pack === "base250") return "/wizard-joe-base250/library.json";
   if (pack === "mixed") return "/wizard-joe/library.json";
@@ -84,9 +120,28 @@ function shortPoseLabel(pose) {
 }
 
 export function JoeStudio() {
+  const navigate = useNavigate();
   const { pack: packParam } = useParams();
   const pack = normalizePack(packParam);
   const libraryUrl = libraryUrlFor(pack);
+  const stageHostRef = useRef(null);
+  const {
+    active: stageFullscreen,
+    toggle: toggleStageFullscreen,
+    exit: exitStageFullscreen,
+  } = useStageFullscreen(stageHostRef);
+  const [stageBg, setStageBg] = useState(readStageBg);
+  const stageBgWhite = stageBg === STAGE_BG_WHITE;
+  const toggleStageBg = useCallback(() => {
+    setStageBg((cur) => writeStageBg(cur === STAGE_BG_WHITE ? STAGE_BG_BULL : STAGE_BG_WHITE));
+  }, []);
+  const onPerformerChange = useCallback(
+    (mode) => {
+      writeStoredPerformer(mode);
+      navigate(routeForPerformer(mode));
+    },
+    [navigate],
+  );
 
   const [library, setLibrary] = useState(null);
   const [categoryId, setCategoryId] = useState("moves");
@@ -102,6 +157,10 @@ export function JoeStudio() {
   const [worldOpen, setWorldOpen] = useState(false);
   const [world, setWorld] = useState(() => readWorld(pack));
   const [statusLine, setStatusLine] = useState("ready");
+  const [choreoDriving, setChoreoDriving] = useState(false);
+  /** stage-bay tab: news | controls — keeps overlays off the character plate */
+  const [stageBayTab, setStageBayTab] = useState("news");
+  const choreoFrameBridge = useChoreographyFrameBridge();
 
   useEffect(() => {
     setForceClip("");
@@ -243,6 +302,54 @@ export function JoeStudio() {
     [pack],
   );
 
+  /** Harness drives action / world while running; inert when panel closed. */
+  const onChoreoDrive = useCallback((cmd) => {
+    if (!cmd?.running) {
+      setChoreoDriving(false);
+      setForceClip("");
+      setForcePoseId("");
+      setDancing(false);
+      setPaused(false);
+      setAction("idle");
+      setStage("idle");
+      setStatusLine("ready");
+      return;
+    }
+    setChoreoDriving(true);
+    setForcePoseId("");
+    setDancing(false);
+    setForceClip(cmd.forceClip || "");
+    setAction(cmd.action || "");
+    setStage(cmd.stage || "ready");
+    setPaused(Boolean(cmd.paused));
+    if (cmd.speed != null && Number.isFinite(Number(cmd.speed))) {
+      setPlaySpeed(Number(cmd.speed));
+    }
+    if (cmd.world) {
+      // RAF-rate updates — keep in memory only; do not thrash localStorage.
+      setWorld((prev) =>
+        clampWorld({
+          ...prev,
+          x: cmd.world.x ?? prev.x,
+          y: cmd.world.y ?? prev.y,
+          flipX: cmd.world.flipX ?? prev.flipX,
+          zoom: cmd.world.zoom ?? prev.zoom,
+          bob: cmd.world.bob ?? prev.bob,
+          sway: cmd.world.sway ?? prev.sway,
+        }),
+      );
+    }
+    setStatusLine(`choreo · ${cmd.action || cmd.forceClip || "run"}`);
+  }, []);
+
+  const onStageFrame = useCallback(
+    (frame) => {
+      setFrameInfo(frame);
+      choreoFrameBridge(frame);
+    },
+    [choreoFrameBridge],
+  );
+
   const cycleCategory = useCallback((dir) => {
     setCategoryId((cur) => {
       const idx = STUDIO_CATEGORIES.findIndex((c) => c.id === cur);
@@ -357,6 +464,7 @@ export function JoeStudio() {
             </span>
           </div>
           <div className="wj-topbar-actions">
+            <PerformerSwitch value="wizard" onChange={onPerformerChange} />
             <Link className={`wj-icon-btn${pack === "alpha-hd" ? " is-active" : ""}`} to="/joe/alpha-hd">
               Alpha HD
             </Link>
@@ -376,6 +484,16 @@ export function JoeStudio() {
             <button type="button" className={`wj-icon-btn${paused ? " is-active" : ""}`} onClick={() => setPaused((p) => !p)}>
               {paused ? "Resume" : "Pause"}
             </button>
+            <button
+              type="button"
+              className={`wj-icon-btn${stageBgWhite ? " is-active" : ""}`}
+              onClick={toggleStageBg}
+              title={stageBgWhite ? "Switch to bull / dark stage" : "Switch to white stage"}
+              aria-pressed={stageBgWhite}
+            >
+              {stageBgWhite ? "White" : "Bull"}
+            </button>
+            <StageFullscreenButton active={stageFullscreen} onToggle={toggleStageFullscreen} />
           </div>
         </header>
 
@@ -519,50 +637,114 @@ export function JoeStudio() {
             </div>
           </section>
 
-          <section className="wj-preview">
-            <WizardJoeStage
-              stage={stage}
-              status="active"
-              dancing={dancing && !forceClip && !forcePoseId}
-              action={dancing && !forceClip ? "breakdance" : action}
-              forceClip={forceClip}
-              forcePoseId={forcePoseId}
-              speed={playSpeed}
-              paused={paused}
-              libraryUrl={libraryUrl}
-              world={world}
-              onWorldChange={onWorldChange}
-              onFrame={setFrameInfo}
-            />
-            {worldOpen ? (
-              <aside className="wj-world-drawer">
-                <WorldSpacePanel world={world} onChange={onWorldChange} onReset={resetWorld} />
-              </aside>
-            ) : null}
-            {/* Live rant/chat/TTS: same-origin NewsWiz SPA (newswiz CLI), not cross-origin API. */}
-            <NewsWizEmbed />
-            <div className="wj-gamepad-float">
-              <GamepadPad
-                onAction={onGamepadAction}
-                labels={{
-                  x: "Walk loop",
-                  y: clipNames.has("fly_forward") ? "Fly loop" : "Dance",
-                }}
+          <section className={`wj-preview${stageBgWhite ? " is-bg-white" : " is-bg-bull"}`}>
+            <div
+              ref={stageHostRef}
+              className={`wj-preview-stage-host${stageFullscreen ? " is-stage-fullscreen" : ""}${stageBgWhite ? " is-bg-white" : " is-bg-bull"}`}
+              data-stage-bg={stageBg}
+            >
+              {!stageBgWhite ? <BullBackdrop /> : null}
+              <WizardJoeStage
+                stage={stage}
+                status="active"
+                dancing={dancing && !forceClip && !forcePoseId && !choreoDriving}
+                action={dancing && !forceClip && !choreoDriving ? "breakdance" : action}
+                forceClip={forceClip}
+                forcePoseId={forcePoseId}
+                speed={playSpeed}
+                paused={paused}
+                libraryUrl={libraryUrl}
+                world={world}
+                onWorldChange={choreoDriving ? undefined : onWorldChange}
+                onFrame={onStageFrame}
               />
-            </div>
-            <div className="wj-preview-foot">
-              <span>
-                now <code>{forcePoseId || forceClip || frameInfo?.clipName || action || stage}</code>
-              </span>
-              {frameInfo?.pose ? (
-                <span>
-                  #{frameInfo.pose.runtimeId} {frameInfo.pose.name?.slice(0, 36)}
-                </span>
+              <ChoreographyHarness onDrive={onChoreoDrive} />
+              {stageFullscreen ? (
+                <div className="stage-fs-exit-float">
+                  <StageFullscreenButton
+                    active
+                    onToggle={exitStageFullscreen}
+                  />
+                </div>
               ) : null}
-              <span style={{ marginLeft: "auto" }}>
-                zoom {(world?.zoom ?? 1).toFixed(2)}
-              </span>
+              {!stageFullscreen && worldOpen ? (
+                <aside className="wj-world-drawer">
+                  <WorldSpacePanel world={world} onChange={onWorldChange} onReset={resetWorld} />
+                </aside>
+              ) : null}
             </div>
+            {!stageFullscreen ? (
+              <div className="wj-stage-bay" data-testid="joe-stage-bay">
+                <div className="wj-stage-bay-tabs" role="tablist" aria-label="Stage tools">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={stageBayTab === "news"}
+                    className={stageBayTab === "news" ? "is-active" : ""}
+                    data-testid="joe-bay-tab-news"
+                    onClick={() => setStageBayTab("news")}
+                  >
+                    NewsWiz
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={stageBayTab === "controls"}
+                    className={stageBayTab === "controls" ? "is-active" : ""}
+                    data-testid="joe-bay-tab-controls"
+                    onClick={() => setStageBayTab("controls")}
+                  >
+                    Gamepad
+                  </button>
+                </div>
+                <div className="wj-stage-bay-body">
+                  {stageBayTab === "news" ? (
+                    <div className="wj-stage-bay-panel" role="tabpanel" data-testid="joe-bay-news">
+                      <NewsWizEmbed docked defaultExpanded={false} />
+                    </div>
+                  ) : (
+                    <div
+                      className="wj-stage-bay-panel wj-stage-bay-controls"
+                      role="tabpanel"
+                      data-testid="joe-bay-controls"
+                    >
+                      {!choreoDriving ? (
+                        <GamepadPad
+                          onAction={onGamepadAction}
+                          labels={{
+                            x: "Walk loop",
+                            y: clipNames.has("fly_forward") ? "Fly loop" : "Dance",
+                          }}
+                        />
+                      ) : (
+                        <p className="wj-stage-bay-muted">
+                          Gamepad paused while choreography harness is driving the stage.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
+            {!stageFullscreen ? (
+              <div className="wj-preview-foot">
+                <span>
+                  now <code>{forcePoseId || forceClip || frameInfo?.clipName || action || stage}</code>
+                </span>
+                {frameInfo?.pose ? (
+                  <span>
+                    #{frameInfo.pose.runtimeId} {frameInfo.pose.name?.slice(0, 36)}
+                  </span>
+                ) : null}
+                <span style={{ marginLeft: "auto" }}>
+                  zoom {(world?.zoom ?? 1).toFixed(2)}
+                </span>
+                <StageFullscreenButton
+                  active={stageFullscreen}
+                  onToggle={toggleStageFullscreen}
+                />
+              </div>
+            ) : null}
           </section>
         </div>
       </div>
