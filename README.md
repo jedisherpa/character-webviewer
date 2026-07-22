@@ -66,3 +66,16 @@ point Character Studio at 41BirdLive for Joe rant APIs.
 
 - **Wizard Joe** — category rail, pose grid, world drawer, clickable gamepad
 - **Dragonview** — browser world-space sim, pose grid, clickable gamepad
+
+### Choreography harness (Wizard Joe)
+
+Reusable 120s script + telemetry for locomotion/facing/flight analysis rounds.
+
+1. Open `/joe/alpha-hd` (or `/joe/base250`).
+2. Click **Choreography harness** (top-left of the stage).
+3. Pick round + seed → **Run 120s script**.
+4. Hold arrow keys to override the script while running; Space stops.
+5. **Export CSV + manifest** (browser download). Keep under `artifacts/choreography/`.
+
+When the panel is closed the harness does not drive the stage. Details:
+[`src/choreography/README.md`](src/choreography/README.md).

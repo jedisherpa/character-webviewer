@@ -3,7 +3,8 @@
   width: 100%;
   height: 100%;
   min-height: 320px;
-  background: #ffffff;
+  /* Transparent — Charging Bull plate shows through from host stage */
+  background: transparent;
   overflow: hidden;
   cursor: grab;
   touch-action: none;

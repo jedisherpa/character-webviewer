@@ -117,17 +117,54 @@ export function WizardJoeStage({
   poseRef.current = pose;
 
   useEffect(() => {
-    if (typeof onFrame === "function") {
-      onFrame({
-        clipName,
-        frameIndex,
-        pose,
-        total: frames.length,
-        totalMs,
-        kind,
-      });
+    if (typeof onFrame !== "function") return;
+    const canvas = canvasRef.current;
+    const w = worldRef.current;
+    let rect = null;
+    try {
+      if (canvas && pose?.frame) {
+        const img = imageCache.current.get(pose.frame);
+        if (img?.complete) {
+          rect = worldDrawRect(
+            canvas.width,
+            canvas.height,
+            img.width,
+            img.height,
+            w,
+            0,
+          );
+        }
+      }
+    } catch {
+      rect = null;
     }
-  }, [onFrame, clipName, frameIndex, pose, frames.length, totalMs, kind]);
+    onFrame({
+      clipName,
+      frameIndex,
+      pose,
+      poseId: pose?.id || forcePoseId || "",
+      total: frames.length,
+      totalMs,
+      kind,
+      world: { ...w },
+      flipX: Boolean(w?.flipX),
+      canvasWidth: canvas?.width || 0,
+      canvasHeight: canvas?.height || 0,
+      drawRect: rect
+        ? {
+            left: rect.dx,
+            top: rect.dy,
+            width: rect.dw,
+            height: rect.dh,
+            feetX: rect.dx + rect.dw / 2,
+            feetY: rect.dy + rect.dh * 0.92,
+            centroidX: rect.dx + rect.dw / 2,
+            centroidY: rect.dy + rect.dh * 0.5,
+          }
+        : null,
+      timeMs: performance.now(),
+    });
+  }, [onFrame, clipName, frameIndex, pose, frames.length, totalMs, kind, forcePoseId, world]);
 
   const paint = useCallback((img, timeSec = 0) => {
     const canvas = canvasRef.current;

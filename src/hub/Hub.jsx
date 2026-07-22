@@ -1,93 +1,54 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { PerformerSwitch } from "../shared/PerformerSwitch.jsx";
+import { routeForPerformerHub } from "../shared/performerModes.js";
 import {
-  BIRD_LIVE_URL,
-  HAS_BIRD_LIVE,
-  HAS_NEWSWIZ,
-  NEWSWIZ_URL,
-  probeBirdLive,
-  probeNewswiz,
-} from "../shared/config.js";
+  FLEET_CARDS,
+  STUDIO_CARDS,
+  probeFleetOrigin,
+} from "../shared/fleet.js";
 import "./Hub.css";
 
-const CARDS = [
-  {
-    to: "/41birdlive",
-    title: "41 Bird Live",
-    badge: "Robin",
-    blurb:
-      "One-bird Prism runtime on Hetzner · open full SPA (same-origin tokens there)",
-    accent: "teal",
-  },
-  {
-    to: "/studio",
-    title: "Production Studio",
-    badge: "primary",
-    blurb:
-      "Full-stage production bay · record poses & clips into sequences · save/replay · programmable gamepad · toggle drawers",
-    accent: "amber",
-  },
-  {
-    to: "/joe/alpha-hd",
-    title: "Wizard Joe · Alpha HD",
-    badge: "960×540",
-    blurb: "Pose studio · embed/open NewsWiz for live rant (same-origin to newswiz CLI)",
-    accent: "violet",
-  },
-  {
-    to: "/dragon",
-    title: "Dragonview classic",
-    badge: "5-cast",
-    blurb: "Original multi-cast world-space pad · walk/fly loops · pose grid",
-    accent: "slate",
-  },
-  {
-    to: "/joe/base250",
-    title: "Wizard Joe · Base 250",
-    badge: "legacy",
-    blurb: "Side-by-side compare pack",
-    accent: "slate",
-  },
-];
+function statusClass(probe) {
+  if (!probe) return "is-off";
+  if (probe.ok) return "is-ok";
+  if (probe.configured && probe.error) return "is-bad";
+  return "is-off";
+}
+
+function statusLabel(probe) {
+  if (!probe) return "checking…";
+  if (probe.ok) return "online";
+  if (probe.status === 502 || probe.status === 503) return `degraded · HTTP ${probe.status}`;
+  if (probe.error) return probe.error;
+  return "unknown";
+}
 
 export function Hub() {
-  const [newswiz, setNewswiz] = useState({
-    ok: false,
-    configured: HAS_NEWSWIZ,
-    error: HAS_NEWSWIZ ? "probing…" : "not set",
-    url: NEWSWIZ_URL || null,
-  });
-  const [bird, setBird] = useState({
-    ok: false,
-    configured: HAS_BIRD_LIVE,
-    error: HAS_BIRD_LIVE ? "probing…" : "not set",
-    url: BIRD_LIVE_URL || null,
-  });
+  const navigate = useNavigate();
+  const [probes, setProbes] = useState(() => ({}));
 
   useEffect(() => {
     let cancelled = false;
-    probeNewswiz().then((r) => {
-      if (!cancelled) setNewswiz(r);
-    });
-    probeBirdLive().then((r) => {
-      if (!cancelled) setBird(r);
-    });
+    const run = async () => {
+      const entries = await Promise.all(
+        FLEET_CARDS.map(async (card) => {
+          if (!card.href || !card.probe) {
+            return [card.id, { ok: true, configured: true, url: card.href, error: null }];
+          }
+          const result = await probeFleetOrigin(card.href, card.probe);
+          return [card.id, result];
+        }),
+      );
+      if (!cancelled) {
+        setProbes(Object.fromEntries(entries));
+      }
+    };
+    void run();
     return () => {
       cancelled = true;
     };
   }, []);
-
-  const newswizLabel = !newswiz.configured
-    ? "NewsWiz URL not set (VITE_NEWSWIZ_URL) · pose studio is static-only"
-    : newswiz.ok
-      ? `NewsWiz · ${newswiz.url}`
-      : `NewsWiz unreachable · ${newswiz.error || "error"}`;
-
-  const birdLabel = !bird.configured
-    ? "41 Bird Live URL not set (VITE_BIRD_LIVE_URL)"
-    : bird.ok
-      ? `41 Bird Live · ${bird.url}`
-      : `41 Bird Live unreachable · ${bird.error || "error"}`;
 
   return (
     <div className="hub">
@@ -95,7 +56,15 @@ export function Hub() {
         <header className="hub-head">
           <div>
             <strong>Character Studio</strong>
-            <span>Pose packs on Vercel · live speech via NewsWiz same-origin</span>
+            <span>
+              Hub for studio tools + live fleet ·{" "}
+              <a
+                href="https://character-webviewer.vercel.app/"
+                style={{ color: "inherit" }}
+              >
+                character-webviewer.vercel.app
+              </a>
+            </span>
           </div>
           <a
             className="hub-gh"
@@ -107,18 +76,18 @@ export function Hub() {
           </a>
         </header>
 
-        <div className={`hub-live ${newswiz.configured ? (newswiz.ok ? "is-ok" : "is-bad") : "is-off"}`}>
-          <span className="hub-live-dot" aria-hidden="true" />
-          {newswizLabel}
-        </div>
-        <div className={`hub-live ${bird.configured ? (bird.ok ? "is-ok" : "is-bad") : "is-off"}`}>
-          <span className="hub-live-dot" aria-hidden="true" />
-          {birdLabel}
+        <div className="hub-section-label">Jump to performer</div>
+        <div className="hub-performer-row">
+          <PerformerSwitch
+            value="wizard"
+            onChange={(mode) => navigate(routeForPerformerHub(mode))}
+          />
         </div>
 
+        <div className="hub-section-label">Character Studio (this app)</div>
         <div className="hub-grid">
-          {CARDS.map((c) => (
-            <Link key={c.to} to={c.to} className={`hub-tile accent-${c.accent}`}>
+          {STUDIO_CARDS.map((c) => (
+            <Link key={c.id} to={c.to} className={`hub-tile accent-${c.accent}`}>
               <div className="hub-tile-top">
                 <span className="hub-badge">{c.badge}</span>
               </div>
@@ -129,11 +98,41 @@ export function Hub() {
           ))}
         </div>
 
+        <div className="hub-section-label">Live fleet (HTTPS)</div>
+        <div className="hub-grid hub-grid-fleet">
+          {FLEET_CARDS.map((c) => {
+            const probe = probes[c.id];
+            const cls = statusClass(probe);
+            return (
+              <a
+                key={c.id}
+                href={c.href}
+                target="_blank"
+                rel="noreferrer"
+                className={`hub-tile accent-${c.accent} hub-tile-fleet`}
+              >
+                <div className="hub-tile-top">
+                  <span className="hub-badge">{c.badge}</span>
+                  <span className={`hub-probe ${cls}`}>
+                    <span className="hub-live-dot" aria-hidden="true" />
+                    {statusLabel(probe)}
+                  </span>
+                </div>
+                <h2>{c.title}</h2>
+                <p>{c.blurb}</p>
+                <code className="hub-url">{c.href?.replace(/^https:\/\//, "")}</code>
+                <span className="hub-open">Open in new tab ↗</span>
+              </a>
+            );
+          })}
+        </div>
+
         <footer className="hub-foot">
           <p>
-            <strong>NewsWiz</strong> (<code>newswiz</code> CLI) owns session tokens, rant, and
-            tri-bus TTS. Character Studio embeds/opens that SPA — it does not call Hetzner APIs
-            cross-origin. Set <code>VITE_NEWSWIZ_URL</code> to the NewsWiz origin.
+            <strong>Studio tools</strong> run on Vercel. <strong>NewsWiz</strong> and{" "}
+            <strong>41BirdLive</strong> mint session tokens same-origin on their own hosts —
+            open those tabs for live rant/TTS. Newsroom and API hosts are listed for ops
+            reachability.
           </p>
         </footer>
       </div>
