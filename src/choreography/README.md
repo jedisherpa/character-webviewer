@@ -16,7 +16,7 @@ Reusable controls for the four-round **bird** choreography loop (Wizard Joe stag
 | 0–18s | R1 | Ground walk / run travel |
 | 18–36s | R2 | Facing left/right, sidestep, backward policy |
 | 36–60s | R3 | Takeoff hop → fly bank → land |
-| 60–120s | R4 | Extended flight + speak acceptance |
+| 60–120s | R4 | **Fly while speaking** (rant-in-air) + land + short grounded speak |
 
 ## Use later
 

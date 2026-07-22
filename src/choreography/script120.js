@@ -32,7 +32,10 @@ export const CHOREO_SCRIPT_EVAL_WINDOW_S = 60;
  * 0–18s  R1 ground gait + readable travel
  * 18–36s R2 facing parity (left/right/sidestep/backward)
  * 36–60s R3 takeoff + flight bank + land
- * 60–120 R4 extended acceptance / speak
+ * 60–120 R4 extended acceptance + **fly while speaking** (rant-in-air)
+ *
+ * fly_speak: locomotion stays airborne (fly band) while stage=speaking so the
+ * bird can talk mid-flight. forceClip stays fly_forward (body), stage carries speech.
  *
  * @type {ChoreoCue[]}
  */
@@ -224,55 +227,65 @@ export const CHOREO_SCRIPT_120 = Object.freeze([
   },
   {
     t: 76,
-    action: "fly_forward",
+    action: "fly_speak",
     forceClip: "fly_forward",
-    stage: "ready",
+    stage: "speaking",
     inputX: 0.6,
     inputY: -0.3,
-    note: "r4 second flight",
+    note: "rant while climb-right (fly + talk)",
     round: "r4",
   },
   {
-    t: 88,
-    action: "fly_forward",
+    t: 84,
+    action: "fly_speak",
     forceClip: "fly_forward",
-    stage: "ready",
-    inputX: -0.6,
-    inputY: 0.15,
-    note: "r4 flight reverse",
+    stage: "speaking",
+    inputX: 0.85,
+    inputY: 0,
+    note: "rant while level cruise",
     round: "r4",
   },
   {
-    t: 98,
+    t: 92,
+    action: "fly_speak",
+    forceClip: "fly_forward",
+    stage: "speaking",
+    inputX: -0.7,
+    inputY: 0.1,
+    note: "rant while bank reverse",
+    round: "r4",
+  },
+  {
+    t: 100,
     action: "land",
     forceClip: "jump",
     stage: "ready",
-    inputX: 0,
+    inputX: 0.1,
     inputY: 0.5,
-    note: "r4 land",
+    note: "r4 land after flying rant",
     round: "r4",
   },
   {
-    t: 102,
-    action: "walk_forward",
-    forceClip: "walk_forward",
-    stage: "ready",
-    inputX: 0.45,
-    inputY: 0,
-    note: "r4 recovery walk",
-    round: "r4",
-  },
-  {
-    t: 108,
+    t: 104,
     action: "speak",
     forceClip: "speak",
     stage: "speaking",
     inputX: 0,
     inputY: 0,
-    note: "speak hold",
+    note: "grounded speak hold (post-land)",
     round: "r4",
   },
-  { t: 114, action: "idle", forceClip: "idle", stage: "idle", inputX: 0, inputY: 0, note: "final idle", round: "r4" },
+  {
+    t: 110,
+    action: "walk_forward",
+    forceClip: "walk_forward",
+    stage: "ready",
+    inputX: 0.4,
+    inputY: 0,
+    note: "r4 recovery walk",
+    round: "r4",
+  },
+  { t: 116, action: "idle", forceClip: "idle", stage: "idle", inputX: 0, inputY: 0, note: "final idle", round: "r4" },
   { t: 120, action: "idle", forceClip: "idle", stage: "idle", inputX: 0, inputY: 0, note: "end", round: "r4" },
 ]);
 

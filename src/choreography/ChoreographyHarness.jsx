@@ -210,17 +210,29 @@ export function ChoreographyHarness({
       });
 
       const loco = locoRef.current;
+      const airborne =
+        action === "fly_forward" || action === "fly" || action === "fly_speak";
+      const speaking =
+        cue.stage === "speaking" || action === "speak" || action === "fly_speak";
+      // Body clip: keep wings when flying while talking; speak clip only when planted.
+      const bodyClip =
+        forceClip === "idle"
+          ? ""
+          : action === "fly_speak"
+            ? "fly_forward"
+            : forceClip;
       const driveCmd = {
         running: true,
-        action,
-        forceClip: forceClip === "idle" ? "" : forceClip,
-        stage: cue.stage || (action === "speak" ? "speaking" : "ready"),
+        action: action === "fly_speak" ? "fly_forward" : action,
+        forceClip: bodyClip,
+        stage: speaking ? "speaking" : cue.stage || "ready",
+        speaking,
         world: {
           x: loco.x,
           y: loco.y,
           flipX: loco.flipX,
-          zoom: action === "fly_forward" || action === "fly" ? 0.95 : 1.05,
-          bob: action === "fly_forward" || action === "fly" ? 0.08 : 0.18,
+          zoom: airborne ? 0.95 : 1.05,
+          bob: airborne ? 0.08 : 0.18,
           sway: 0.1,
         },
         paused: false,
@@ -447,7 +459,7 @@ export function ChoreographyHarness({
           </div>
 
           <p className="cw-choreo-help">
-            Bird program: 0–18s ground, 18–36s facing, 36–60s flight, 60–120s acceptance. Hold
+            Bird program: 0–18s ground, 18–36s facing, 36–60s flight, 60–120s fly+talk then land. Hold
             arrows to override (F = fly). Space stops. Export CSV + manifest under{" "}
             <code>artifacts/choreography/</code>. Closed panel does not drive the stage.
           </p>

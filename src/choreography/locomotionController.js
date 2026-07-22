@@ -21,8 +21,11 @@ export const ACTION_SPEEDS = Object.freeze({
   sidestep: 0.1,
   fly: 0.18,
   fly_forward: 0.2,
+  /** Fly while talking / ranting — same band as cruise, slightly calmer. */
+  fly_speak: 0.16,
   jump: 0.1,
   hop: 0.12,
+  /** Grounded speak hold only (no travel). Prefer fly_speak for rant-in-air. */
   speak: 0,
   land: 0.06,
 });
@@ -72,9 +75,15 @@ export function targetSpeedFor(action, inputMagnitude = 1) {
 
 function yBandFor(action) {
   const a = String(action || "idle");
-  if (a === "fly" || a === "fly_forward") return Y_BAND.fly;
+  if (a === "fly" || a === "fly_forward" || a === "fly_speak") return Y_BAND.fly;
   if (a === "jump" || a === "hop") return Y_BAND.hop;
   return Y_BAND.ground;
+}
+
+/** True when the body should use flight clips while talking. */
+export function isFlySpeakAction(action) {
+  const a = String(action || "");
+  return a === "fly_speak" || a === "fly" || a === "fly_forward";
 }
 
 /**
@@ -136,8 +145,12 @@ export function stepLocomotion(state, cmd = {}) {
     ty = input.y * base;
   }
 
-  // Flight: slight automatic lift when moving so altitude is readable without pure inputY.
-  if ((action === "fly" || action === "fly_forward") && input.magnitude > 0 && Math.abs(input.y) < 0.15) {
+  // Flight (incl. fly while speaking): slight automatic lift when moving.
+  if (
+    (action === "fly" || action === "fly_forward" || action === "fly_speak")
+    && input.magnitude > 0
+    && Math.abs(input.y) < 0.15
+  ) {
     ty -= base * 0.12;
   }
 
@@ -146,9 +159,8 @@ export function stepLocomotion(state, cmd = {}) {
     ty -= base * 0.55;
   }
 
-  // Landing bias toward ground band center
+  // Landing / grounded speak: bias toward ground band center (not fly_speak).
   if (action === "land" || action === "idle" || action === "speak") {
-    const band = yBandFor("idle");
     const groundY = 0.82;
     if (state.y < groundY - 0.02) {
       ty += Math.min(0.2, (groundY - state.y) * 2.5);
