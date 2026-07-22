@@ -1,0 +1,74 @@
+.stage-fs-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 28px;
+  padding: 0.32rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(12, 16, 24, 0.78);
+  color: rgba(248, 250, 252, 0.88);
+  font: 700 0.62rem/1 system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 30;
+}
+
+.stage-fs-btn:hover {
+  border-color: rgba(126, 200, 188, 0.45);
+  background: rgba(126, 200, 188, 0.14);
+}
+
+.stage-fs-btn.is-active {
+  color: #0a140d;
+  background: #7ec8bc;
+  border-color: transparent;
+}
+
+.stage-fs-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.stage-fs-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+/* Host fills the viewport when full-screen (CSS fallback + native FS) */
+.is-stage-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9990 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: #0b0a09 !important;
+}
+
+.is-stage-fullscreen .wizard-joe-stage,
+.is-stage-fullscreen canvas {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+}
+
+/* Floating exit control when chrome is gone */
+.is-stage-fullscreen .stage-fs-exit-float {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 10000;
+}
+
+html.stage-fs-active,
+html.stage-fs-active body {
+  overflow: hidden !important;
+}
