@@ -158,6 +158,8 @@ export function JoeStudio() {
   const [world, setWorld] = useState(() => readWorld(pack));
   const [statusLine, setStatusLine] = useState("ready");
   const [choreoDriving, setChoreoDriving] = useState(false);
+  /** stage-bay tab: news | controls — keeps overlays off the character plate */
+  const [stageBayTab, setStageBayTab] = useState("news");
   const choreoFrameBridge = useChoreographyFrameBridge();
 
   useEffect(() => {
@@ -670,19 +672,60 @@ export function JoeStudio() {
                   <WorldSpacePanel world={world} onChange={onWorldChange} onReset={resetWorld} />
                 </aside>
               ) : null}
-              {!stageFullscreen ? <NewsWizEmbed /> : null}
-              {!stageFullscreen && !choreoDriving ? (
-                <div className="wj-gamepad-float">
-                  <GamepadPad
-                    onAction={onGamepadAction}
-                    labels={{
-                      x: "Walk loop",
-                      y: clipNames.has("fly_forward") ? "Fly loop" : "Dance",
-                    }}
-                  />
-                </div>
-              ) : null}
             </div>
+            {!stageFullscreen ? (
+              <div className="wj-stage-bay" data-testid="joe-stage-bay">
+                <div className="wj-stage-bay-tabs" role="tablist" aria-label="Stage tools">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={stageBayTab === "news"}
+                    className={stageBayTab === "news" ? "is-active" : ""}
+                    data-testid="joe-bay-tab-news"
+                    onClick={() => setStageBayTab("news")}
+                  >
+                    NewsWiz
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={stageBayTab === "controls"}
+                    className={stageBayTab === "controls" ? "is-active" : ""}
+                    data-testid="joe-bay-tab-controls"
+                    onClick={() => setStageBayTab("controls")}
+                  >
+                    Gamepad
+                  </button>
+                </div>
+                <div className="wj-stage-bay-body">
+                  {stageBayTab === "news" ? (
+                    <div className="wj-stage-bay-panel" role="tabpanel" data-testid="joe-bay-news">
+                      <NewsWizEmbed docked defaultExpanded={false} />
+                    </div>
+                  ) : (
+                    <div
+                      className="wj-stage-bay-panel wj-stage-bay-controls"
+                      role="tabpanel"
+                      data-testid="joe-bay-controls"
+                    >
+                      {!choreoDriving ? (
+                        <GamepadPad
+                          onAction={onGamepadAction}
+                          labels={{
+                            x: "Walk loop",
+                            y: clipNames.has("fly_forward") ? "Fly loop" : "Dance",
+                          }}
+                        />
+                      ) : (
+                        <p className="wj-stage-bay-muted">
+                          Gamepad paused while choreography harness is driving the stage.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
             {!stageFullscreen ? (
               <div className="wj-preview-foot">
                 <span>

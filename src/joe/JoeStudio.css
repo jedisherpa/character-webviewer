@@ -585,18 +585,82 @@ a.wj-icon-btn:hover {
   height: 100% !important;
 }
 
-/* NewsWiz dock floats over the stage — does not shrink the stage height */
-.wj-preview-stage-host .newswiz-embed {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  z-index: 8;
-  max-height: min(42vh, 420px);
-  overflow: auto;
+/* Stage tools bay — NewsWiz + gamepad sit BELOW the plate (no float stack) */
+.wj-stage-bay {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(42vh, 360px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 10, 14, 0.98);
+  z-index: 4;
 }
 
+.wj-stage-bay-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px 0;
+  flex-shrink: 0;
+}
+
+.wj-stage-bay-tabs button {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  font: 700 0.7rem/1 system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.wj-stage-bay-tabs button.is-active {
+  color: #e8ffc8;
+  border-color: rgba(180, 255, 100, 0.45);
+  background: rgba(80, 120, 30, 0.35);
+}
+
+.wj-stage-bay-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 10px 10px;
+}
+
+.wj-stage-bay-panel {
+  min-height: 0;
+  height: 100%;
+}
+
+.wj-stage-bay-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px 12px;
+  min-height: 11rem;
+}
+
+.wj-stage-bay-controls .gp {
+  transform: none;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.wj-stage-bay-muted {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  text-align: center;
+  max-width: 28rem;
+}
+
+/* Legacy float class — no longer used on Joe stage; keep safe if reused */
 .wj-preview-stage-host .wj-gamepad-float {
-  z-index: 9;
+  display: none;
 }
 
 .wj-preview-stage-host .wizard-joe-stage-floor {
